@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Admin - Utilisateurs</title>
+
+<style>
+body { font-family: Arial; padding: 20px; }
+table { width: 100%; border-collapse: collapse; }
+td, th { padding: 10px; border: 1px solid #ccc; }
+button { padding: 5px 10px; cursor: pointer; }
+</style>
+
+</head>
+<body>
+
+<h2>👨‍💼 Gestion des utilisateurs</h2>
+
+<h3>➕ Créer un utilisateur</h3>
+
+<input type="text" id="nom" placeholder="Nom">
+<input type="text" id="prenom" placeholder="Prénom">
+<input type="text" id="fonction" placeholder="Fonction">
+<input type="email" id="email" placeholder="Email">
+
+<button onclick="ajouterUtilisateur()">Créer utilisateur</button>
+
+<hr>
+
+<table>
+<thead>
+<tr>
+<th>Nom</th>
+<th>Email</th>
+<th>Rôle</th>
+<th>Statut</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="usersTable"></tbody>
+</table>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, doc, updateDoc, setDoc, getDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+  getAuth, onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+  authDomain: "owogestion-de436.firebaseapp.com",
+  projectId: "owogestion-de436",
+  storageBucket: "owogestion-de436.firebasestorage.app",
+  messagingSenderId: "357508008682",
+  appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const table = document.getElementById("usersTable");
+
+// 🔐 sécurité admin
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return location.href = "index.html";
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+
+  if (!snap.exists() || snap.data().role !== "admin") {
+    alert("Accès refusé");
+    return location.href = "register.html";
+  }
+
+  await chargerUtilisateurs();
+});
+
+
+// 🔥 AJOUT UTILISATEUR
+window.ajouterUtilisateur = async () => {
+
+  const email = document.getElementById("email").value;
+  const nom = document.getElementById("nom").value;
+  const prenom = document.getElementById("prenom").value;
+
+  if (!email) return alert("Email requis");
+
+  try {
+
+    const secondApp = initializeApp(firebaseConfig, "Secondary");
+    const secondAuth = getAuth(secondApp);
+
+    const tempPassword = Math.random().toString(36).slice(-8) + "A1!";
+
+    const userCredential = await createUserWithEmailAndPassword(
+      secondAuth,
+      email,
+      tempPassword
+    );
+
+    const user = userCredential.user;
+
+    await setDoc(doc(db, "users", user.uid), {
+      nom,
+      prenom,
+      email,
+      role: "user",
+      active: true,
+      mustResetPassword: true,
+      permissions: {
+        budget: "none",
+        rapport: "none",
+        financement: "none",
+        appro: "none",
+        balance: "none",
+        paramettre: "none"
+      }
+    });
+
+    await sendPasswordResetEmail(auth, email);
+
+    alert("✅ Utilisateur créé + email envoyé");
+
+    await secondAuth.signOut();
+
+    await chargerUtilisateurs();
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
+};
+
+
+// 🔥 CHARGER UTILISATEURS
+async function chargerUtilisateurs() {
+  const usersSnap = await getDocs(collection(db, "users"));
+
+  table.innerHTML = "";
+
+  usersSnap.forEach(docItem => {
+    const u = docItem.data();
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${u.prenom || ""} ${u.nom || ""}</td>
+      <td>${u.email || ""}</td>
+      <td>${u.role || "user"}</td>
+      <td>${u.active ? "✅ Actif" : "❌ Désactivé"}</td>
+      <td>
+
+        <button onclick="toggleUser('${docItem.id}', ${u.active})">
+          ${u.active ? "Désactiver" : "Activer"}
+        </button>
+
+        <button onclick="makeAdmin('${docItem.id}')">Admin</button>
+
+        <button onclick="deleteUser('${docItem.id}')">Supprimer</button>
+
+        <br><br>
+
+        <p>Budget :</p>
+        <select onchange="updatePermission('${docItem.id}', 'budget', this.value)">
+          <option value="none" ${u.permissions?.budget === "none" ? "selected" : ""}>Aucun</option>
+          <option value="read" ${u.permissions?.budget === "read" ? "selected" : ""}>Lecture</option>
+          <option value="write" ${u.permissions?.budget === "write" ? "selected" : ""}>Écriture</option>
+        </select>
+
+        <p>Rapport :</p>
+        <select onchange="updatePermission('${docItem.id}', 'rapport', this.value)">    
+          <option value="none" ${u.permissions?.rapport === "none" ? "selected" : ""}>Aucun</option>
+          <option value="read" ${u.permissions?.rapport === "read" ? "selected" : ""}>Lecture</option>
+          <option value="write" ${u.permissions?.rapport === "write" ? "selected" : ""}>Écriture</option> 
+        </select>
+
+            <p>Financement :</p>    
+        <select onchange="updatePermission('${docItem.id}', 'financement', this.value)">
+          <option value="none" ${u.permissions?.financement === "none" ? "selected" : ""}>Aucun</option>
+          <option value="read" ${u.permissions?.financement === "read" ? "selected" : ""}>Lecture</option>
+          <option value="write" ${u.permissions?.financement === "write" ? "selected" : ""}>Écriture</option>
+        </select>
+
+        <p>Approvisionnement :</p>
+        <select onchange="updatePermission('${docItem.id}', 'appro', this.value)">
+          <option value="none" ${u.permissions?.appro === "none" ? "selected" : ""}>Aucun</option>
+          <option value="read" ${u.permissions?.appro === "read" ? "selected" : ""}>Lecture</option>
+          <option value="write" ${u.permissions?.appro === "write" ? "selected" : ""}>Écriture</option> 
+        </select>
+
+        <p>Balance :</p>
+        <select onchange="updatePermission('${docItem.id}', 'balance', this.value)">
+          <option value="none" ${u.permissions?.balance === "none" ? "selected" : ""}>Aucun</option>
+          <option value="read" ${u.permissions?.balance === "read" ? "selected" : ""}>Lecture</option>
+          <option value="write" ${u.permissions?.balance === "write" ? "selected" : ""}>Écriture</option>   
+        </select>
+
+        <p>Paramètres :</p>
+        <select onchange="updatePermission('${docItem.id}', 'paramettre', this.value    )">
+          <option value="none" ${u.permissions?.paramettre === "none" ? "selected" : ""}>Aucun</option>
+          <option value="read" ${u.permissions?.paramettre === "read" ? "selected" : ""}>Lecture</option>
+          <option value="write" ${u.permissions?.paramettre === "write" ? "selected" : ""}>Écriture</option>        
+        </select>
+
+
+
+      </td>
+    `;
+
+    table.appendChild(tr);
+  });
+}
+
+
+// 🔥 ACTIVER / DESACTIVER
+window.toggleUser = async (id, current) => {
+  await updateDoc(doc(db, "users", id), {
+    active: !current
+  });
+
+  await chargerUtilisateurs();
+};
+
+
+// 🔥 ADMIN
+window.makeAdmin = async (id) => {
+  await updateDoc(doc(db, "users", id), {
+    role: "admin"
+  });
+
+  await chargerUtilisateurs();
+};
+
+
+// 🔥 PERMISSIONS
+window.updatePermission = async (uid, page, value) => {
+  try {
+    await updateDoc(doc(db, "users", uid), {
+      [`permissions.${page}`]: value
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("Erreur permission");
+  }
+};
+
+
+// 🔥 SUPPRIMER
+window.deleteUser = async (uid) => {
+
+  if (!confirm("Supprimer cet utilisateur ?")) return;
+
+  try {
+    await deleteDoc(doc(db, "users", uid));
+
+    alert("Utilisateur supprimé");
+
+    await chargerUtilisateurs();
+
+  } catch (err) {
+    console.error(err);
+    alert("Erreur suppression");
+  }
+};
+
+</script>
+
+</body>
+</html>

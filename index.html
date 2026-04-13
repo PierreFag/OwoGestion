@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Connexion / Inscription Firebase</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
     input {
       display: block;
@@ -183,24 +184,30 @@ button:hover {
       <li>✔ Stockage sécurisé des fichiers</li>
       <li>✔ Interface simple et rapide</li>
     </ul>
-    <div class="hero-right">
-    <h2 id="title">Inscription</h2>
+   <div class="hero-right">
 
-    <form id="form">
-      <input type="text" id="nom" placeholder="Nom" class="register-only">
-      <input type="text" id="prenom" placeholder="Prénom" class="register-only">
-      <input type="text" id="fonction" placeholder="Fonction" class="register-only">
+<h2 style="text-align: center;">🔐 Connexion</h2>
 
-      <input type="email" id="email" placeholder="Email" required>
-      <input type="password" id="password" placeholder="Mot de passe" required>
+<form id="form">
+  <input type="email" id="email" placeholder="Email" required>
+<div style="position: relative; width: 100%;">
+  <input type="password" id="password" placeholder="Mot de passe" required
+         style="width:100%; padding-right:40px;">
 
-      <button type="submit">S'inscrire</button>
-    </form>
+  <i id="togglePassword"
+     class="fa-solid fa-eye-slash"
+     style="position:absolute; right:10px; top:50%; transform:translateY(-50%);
+            cursor:pointer; color:gray;">
+  </i>
+</div>
+  <button type="submit">Se connecter</button>
 
-    <p class="toggle" id="toggle">Déjà un compte ?</p>
-  </div>
-
-  </div>
+  <p style="color:blue; cursor:pointer;" onclick="resetPassword()">
+Mot de passe oublié ?
+</p>
+</form>
+</div>
+</div>
 
   
 </section>
@@ -273,7 +280,7 @@ button:hover {
   <div>
     
     <div>Pierre FAGBOHOUN
-      <div>CEO of OwoGestion</div>
+      <div>CEO and Developer</div>
       <p>_______</p>
     <div>+229 01 90 93 80 51</div>
     <div>pierrefagbohoun@gmail.com</div> 
@@ -287,136 +294,153 @@ button:hover {
 </section>
 
 
-<!-- Firebase -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    sendEmailVerification,
-    onAuthStateChanged,setPersistence, browserSessionPersistence
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-  import {
-    getFirestore,
-    setDoc,
-    doc
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  setPersistence,
+  browserSessionPersistence,sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  const firebaseConfig = {
-   apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+import {
+  getFirestore,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
   messagingSenderId: "357508008682",
   appId: "1:357508008682:web:8dfc70a52c876d0552e593"
-  };
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  await setPersistence(auth, browserSessionPersistence);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  const form = document.getElementById("form");
-  const toggle = document.getElementById("toggle");
-  const title = document.getElementById("title");
-  const registerFields = document.querySelectorAll(".register-only");
-
-  let isLogin = false;
+// 🔥 session temporaire (fermer onglet = logout)
+await setPersistence(auth, browserSessionPersistence);
 
 
-  toggle.onclick = () => {
-    isLogin = !isLogin;
 
-    registerFields.forEach(el => {
-      el.style.display = isLogin ? "none" : "block";
-    });
+// 🔐 LOGIN
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    title.textContent = isLogin ? "Connexion" : "Inscription";
-    form.querySelector("button").textContent = isLogin ? "Se connecter" : "S'inscrire";
-    toggle.textContent = isLogin ? "Créer un compte" : "Déjà un compte ?";
-  };
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    if (isLogin) {
-      // 🔐 CONNEXION
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        if (!user.emailVerified) {
-          alert("Veuillez vérifier votre email avant de vous connecter.");
-          return;
-        }
-
-        // alert("Connexion réussie !");
-        window.location.href = "register.html";
-
-      } catch (error) {
-        console.error(error);
-        alert(error.message);
-      }
-
-    } else {
-      // 📝 INSCRIPTION
-      const nom = document.getElementById("nom").value;
-      const prenom = document.getElementById("prenom").value;
-      const fonction = document.getElementById("fonction").value;
-      const email = document.getElementById("email").value;
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // 📧 Vérification email
-        await sendEmailVerification(user);
-
-        // 💾 Sauvegarde Firestore
-        await setDoc(doc(db, "users", user.uid), {
-        nom,
-        prenom,
-        email,
-        fonction,
-        photo: "" // 🔥 important
-       });
-
-        alert("Compte créé ! Vérifiez votre email avant de vous connecter.");
-
-      } catch (error) {
-        alert(error.message);
-      }
+    // 🔥 vérifier email
+    if (!user.emailVerified) {
+      alert("Veuillez vérifier votre email");
+      return;
     }
 
-    form.reset();
-  });
+    // 🔥 vérifier Firestore
+    const snap = await getDoc(doc(db, "users", user.uid));
 
-  let timeout;
+    if (!snap.exists()) {
+      alert("Utilisateur non autorisé");
+      await signOut(auth);
+      return;
+    }
 
-function resetTimer() {
-    clearTimeout(timeout);
+    if (!snap.data().active) {
+      alert("Compte désactivé");
+      await signOut(auth);
+      return;
+    }
 
-    timeout = setTimeout(() => {
-        alert("Session expirée (10 min d'inactivité)");
-        auth.signOut().then(() => {
-            window.location.href = "index.html";
-        });
-    }, 10 * 60 * 1000); // 10 minutes
-}
+    // 🔥 redirection
+    window.location.href = "register.html";
 
-// 🔥 détecter activité utilisateur
-["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
-    document.addEventListener(event, resetTimer);
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
 });
 
-// lancer au début
+window.resetPassword = async () => {
+  const email = prompt("Entrez votre email");
+
+  if (!email) return;
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    alert("Email envoyé pour modifier le mot de passe 📧");
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
+
+// 🔥 TIMEOUT (10 min)
+let timeout;
+
+function resetTimer() {
+  clearTimeout(timeout);
+
+  timeout = setTimeout(() => {
+    alert("Session expirée (10 min)");
+    signOut(auth).then(() => {
+      window.location.href = "index.html";
+    });
+  }, 10 * 60 * 1000);
+}
+
+// 🔥 activité utilisateur
+["click","mousemove","keypress","scroll","touchstart"].forEach(event => {
+  document.addEventListener(event, resetTimer);
+});
 
 resetTimer();
 
+
+// 🔥 vérification session
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+
+  if (!snap.exists() || snap.data().active === false) {
+    alert("Accès refusé");
+    await signOut(auth);
+  }
+
+});
+
+const toggle = document.getElementById("togglePassword");
+const password = document.getElementById("password");
+
+toggle.addEventListener("click", () => {
+
+  if (password.type === "password") {
+    password.type = "text";
+
+    // 🔥 change icône (œil ouvert)
+    toggle.classList.remove("fa-eye-slash");
+    toggle.classList.add("fa-eye");
+
+  } else {
+    password.type = "password";
+
+    // 🔥 icône barrée
+    toggle.classList.remove("fa-eye");
+    toggle.classList.add("fa-eye-slash");
+  }
+
+});
 </script>
 
 </body>
