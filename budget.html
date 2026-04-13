@@ -340,8 +340,8 @@ boutton{
 </div>
     </div>
 </header>
-
 <br>
+
 <h1>Ajouter une ligne</h1>
 
 <form id="form">
@@ -369,9 +369,9 @@ boutton{
 <tbody id="tableBody"></tbody>
 
 <tfoot>
-<tr>
+<tr style="background-color: #eee;">
     <td colspan="2"><strong>Total</strong></td>
-    <td id="total">0</td>
+    <td id="total" style="font-size: large; font-weight: bold;">0</td>
     <td style="width:200px;"></td>
 </tr>
 </tfoot>
@@ -388,12 +388,13 @@ import { getAuth, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+      apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
   messagingSenderId: "357508008682",
   appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+
 };
 
 const app = initializeApp(firebaseConfig);
@@ -457,7 +458,6 @@ async function afficherBudget() {
     const snapshot = await getDocs(collection(db, "budget"));
 
     let data = [];
-    let total = 0;
 
     snapshot.forEach(docItem => {
         data.push({
@@ -466,31 +466,127 @@ async function afficherBudget() {
         });
     });
 
+    // 🔥 TRI (compatible alpha-numérique)
     data.sort(trierHierarchique);
 
+    let totalGeneral = 0;
+
+    let groupes = {};
+    let parentsInfo = {};
+
+    // 🔥 DETECTION GROUPES + PARENTS
     data.forEach(item => {
 
-        total += item.montant || 0;
+        if (!item.numero) return;
 
-        const level = getLevel(item.numero);
+        const parent = item.numero.substring(0, 2); // 🔥 base catégorie (11)
 
-        const tr = document.createElement("tr");
+        // 🔥 stocker parent si existe (ex: 11)
+        if (item.numero === parent) {
+            parentsInfo[parent] = item;
+        }
 
-        tr.innerHTML = `
-            <td>${item.numero}</td>
-            <td class="indent-${level}">${item.libelle}</td>
-            <td>${(item.montant).toLocaleString()} FCFA</td>
-            <td>
-                <button onclick="modifier('${item.id}', '${item.numero}', '${item.libelle}', ${item.montant})">Modifier</button>
-                <button onclick="supprimer('${item.id}')">Supprimer</button>
-            </td>
-        `;
+        if (!groupes[parent]) {
+            groupes[parent] = [];
+        }
 
-        tableBody.appendChild(tr);
+        // 🔥 exclure parent de ses enfants
+        if (item.numero !== parent) {
+            groupes[parent].push(item);
+        }
     });
 
-    document.getElementById("total").textContent = total.toLocaleString() + " FCFA";
+    // 🔥 AFFICHAGE
+    Object.keys(groupes).forEach(parent => {
+
+        let sousTotal = 0;
+
+        groupes[parent].forEach(item => {
+            sousTotal += Number(item.montant) || 0;
+        });
+
+        // 🔥 NOM PERSONNALISÉ
+        const libelleParent = parentsInfo[parent]?.libelle || "";
+
+        // 🔥 LIGNE PARENT (cliquable)
+        const trParent = document.createElement("tr");
+        trParent.style.background = "#ddd";
+        trParent.style.fontWeight = "bold";
+
+        trParent.innerHTML = `
+            <td>${parent}</td>
+            <td class="indent-1"
+                style="cursor:pointer; color:#2c3e50;"
+                onclick="modifierCategorie('${parent}', '${libelleParent}')">
+                ${libelleParent || "cliquer pour nommer"}
+            </td>
+            <td>${sousTotal.toLocaleString()} FCFA</td>
+            <td></td>
+        `;
+
+        tableBody.appendChild(trParent);
+
+        // 🔥 ENFANTS
+        groupes[parent].forEach(item => {
+
+            const tr = document.createElement("tr");
+
+            const montant = Number(item.montant) || 0;
+
+            tr.innerHTML = `
+                <td>${item.numero}</td>
+                <td class="indent-2">${item.libelle}</td>
+                <td>${montant.toLocaleString()} FCFA</td>
+                <td>
+                    <button onclick="modifier('${item.id}', '${item.numero}', '${item.libelle}', ${montant})">Modifier</button>
+                    <button onclick="supprimer('${item.id}')">Supprimer</button>
+                </td>
+            `;
+
+            tableBody.appendChild(tr);
+        });
+
+        totalGeneral += sousTotal;
+    });
+
+    document.getElementById("total").textContent =
+        totalGeneral.toLocaleString() + " FCFA";
 }
+
+window.modifierCategorie = async (numero, ancienLibelle) => {
+
+    const nouveauNom = prompt("Nom de la catégorie :", ancienLibelle);
+
+    if (!nouveauNom) return;
+
+    // 🔥 chercher si catégorie existe
+    const snapshot = await getDocs(collection(db, "budget"));
+
+    let docTrouve = null;
+
+    snapshot.forEach(docItem => {
+        if (docItem.data().numero === numero) {
+            docTrouve = docItem;
+        }
+    });
+
+    if (docTrouve) {
+        // 🔥 update
+        await updateDoc(doc(db, "budget", docTrouve.id), {
+            libelle: nouveauNom
+        });
+    } else {
+        // 🔥 créer la catégorie (IMPORTANT)
+        await addDoc(collection(db, "budget"), {
+            numero: numero,
+            libelle: nouveauNom,
+            montant: 0
+        });
+    }
+
+    // 🔥 recharge
+    await afficherBudget();
+};
 
 // 🔥 SUPPRIMER
 window.supprimer = async (id) => {
@@ -638,6 +734,6 @@ if (user) {
 });
 
 </script>
-
+<br>
 </body>
 </html>
