@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Profil</title>
+<style>
+body {
+    margin: 0;
+    padding-top: 100px;
+    font-family: Arial;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #2c3e50;
+    padding: 15px;
+    color: white;
+    z-index: 1000;
+}
+
+nav a {
+    color: white;
+    margin-right: 20px;
+    text-decoration: none;
+    font-weight: bold;
+}
+button {
+    padding: 10px;
+    background: #6a6b6c;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* 🔥 CONTENU */
+.container {
+    padding: 20px;
+}
+
+.card {
+    background: #f5f5f5;
+    padding: 20px;
+    margin: 10px;
+    display: inline-block;
+    width: 220px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.card a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+}
+#companyName, #projectName {
+    background: #2c3e50;;
+    margin-right: 40px;
+    margin-left: 0;
+    color: #ffd700;
+}
+.projet{
+    background: #2c3e50;
+}
+.right-box {
+    display: flex;
+    flex-direction: column; /* 🔥 empile verticalement */
+    align-items: flex-end;  /* 🔥 tout à droite */
+}
+
+.societe-ligne {
+    display: flex;
+    gap: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+    margin-left: 25%;
+}
+.projet-ligne {
+    display: flex;
+    gap: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+}
+
+#userBox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 40px;
+    margin-bottom: -15px;
+}
+
+#userPhoto {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* 🔥 rond */
+}
+</style>
+</head>
+
+<body>
+  <header>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        
+        <div>
+            <div style="display: flex;">
+            <div ><h2>💼 OwoGestion</h2></div>
+            <div class="societe-ligne">
+        <span style="font-weight:bold;">Société:</span>
+        <span id="companyName">HIRISPRODUCTION ET EDITION</span>
+        </div>
+                </div>
+               <nav>
+                <a href="register.html">Accueil</a>
+                <a href="budget.html" id="menu-budget">Budget</a>
+                <a href="indexPAGE.html">Coûts comptabilisés</a>
+                <a href="caisse.html">Dépenses en Espèce</a>
+                 <a href="approvisionnement.html" id="menu-appro">Approvisionnement caisse</a>
+
+                <a href="rapport.html" id="menu-rapport">Rapport de coûts</a>
+
+                <a href="financement.html" id="menu-financement">Financement</a>
+                <a href="balance.html" id="menu-balance">Balance</a>
+                <a href="paramettre.html" id="menu-paramettre">Paramètres</a>
+            </nav>
+        </div>
+            
+<!-- 🔥 UTILISATEUR -->
+     <div class="right-box">
+    
+    <div class="projet-ligne">
+        <span style="font-weight:bold;">Projet :</span>
+        <span id="projectName">TASSI HANGBE</span>
+    </div>
+
+    <div id="userBox">
+        <a href="profil.html">
+            <img id="userPhoto" src="https://via.placeholder.com/40">
+        </a>
+        <div id="userName"></div>
+    </div>
+    <div id="userBox">
+                <button onclick="logout()" style="background-color: #2c3e50; color: red;margin-right: -10px;">Déconnexion</boutton>
+    </div>
+
+</div>
+    </div>
+</header>
+
+<br><br>
+
+<h2>Mon Profil</h2>
+
+<img id="preview" width="120"><br><br>
+
+<input type="file" id="photo"><br><br>
+<button onclick="uploadPhoto()">Mettre à jour</button>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = { 
+  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+  authDomain: "owogestion-de436.firebaseapp.com",
+  projectId: "owogestion-de436",
+  storageBucket: "owogestion-de436.firebasestorage.app",
+  messagingSenderId: "357508008682",
+  appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+
+
+
+let currentUser=null;
+onAuthStateChanged(auth, async (user) => {
+if (user) {
+    currentUser=user;
+    onSnapshot(doc(db, "users", user.uid), (snap) => {
+
+      if (snap.exists()) {
+        const data = snap.data();
+
+        appliquerPermissionsMenu(data);
+
+         // 🔥 sauvegarde locale
+    localStorage.setItem("userData", JSON.stringify(data));
+
+    afficherUser(data);
+  //     document.getElementById("preview").src =
+  // data.photo || "https://via.placeholder.com/120";
+        console.log("Auth OK");
+      }
+      });
+  } else {
+    window.location.href = "index.html";
+  }
+});
+
+
+const localUser = localStorage.getItem("userData");
+
+if (localUser) {
+  const data = JSON.parse(localUser);
+
+  afficherUser(data);
+}
+
+function afficherUser(data) {
+ document.getElementById("userPhoto").src =
+          data.photo || "https://via.placeholder.com/40";
+
+        document.getElementById("userName").textContent =
+          data.prenom + " " + data.nom;
+}
+
+
+function appliquerPermissionsMenu(data) {
+
+  if (data.role === "admin") return;
+
+  if (data.permissions?.budget === "none") {
+    document.getElementById("menu-budget")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-rapport")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-financement")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-appro")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-balance")?.remove();
+  }
+
+   if (data.permissions?.paramettre === "none") {
+    document.getElementById("menu-paramettre")?.remove();
+     }
+}
+
+window.uploadPhoto = async () => {
+
+  const file = document.getElementById("photo").files[0];
+
+  if (!file) return alert("Choisir une image");
+
+  if (!currentUser) {
+    alert("Utilisateur non connecté !");
+    return;
+  }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "OwoGestion_upload");
+    formData.append("folder", "PROFIL_PHOTOS"); 
+
+    const res = await fetch("https://api.cloudinary.com/v1_1/dbp6jdmxz/auto/upload", {
+        method: "POST",
+        body: formData
+    });
+
+  const data = await res.json();
+  console.log(data); // 🔥 debug
+
+  if (!data.secure_url) {
+    alert("Erreur upload image");
+    return;
+  }
+
+  await updateDoc(doc(db, "users", currentUser.uid), {
+    photo: data.secure_url
+  });
+
+  document.getElementById("userPhoto").src = data.secure_url;
+
+  alert("Photo mise à jour !");
+};
+
+onSnapshot(doc(db, "parametres", "config"), (snap) => {
+  if (snap.exists()) {
+    const data = snap.data();
+        document.getElementById("companyName").textContent =
+        snap.data().nomSociete || "Société";
+    
+        document.getElementById("projectName").textContent =
+      snap.data().nomProjet || "Projet";
+  }
+});
+window.logout = () => {
+    localStorage.removeItem("userData"); // 🔥 important
+  signOut(auth).then(() => {
+    window.location.href = "index.html";
+  });
+};
+
+
+
+// 🔥 ENREGISTRER NOM PROJET
+window.saveProjet = async () => {
+
+    const nom = document.getElementById("nomProjet").value;
+
+    if (!nom) {
+        alert("Nom invalide");
+        return;
+    }
+
+    await setDoc(doc(db, "parametres", "config"), {
+        nomProjet: nom
+    }, { merge: true });
+
+    alert("Nom enregistré !");
+};
+
+
+// INIT
+const links = document.querySelectorAll("nav a");
+
+// récupérer le nom de la page actuelle
+const currentPage = window.location.pathname.split("/").pop();
+
+links.forEach(link => {
+    const linkPage = link.getAttribute("href");
+
+    if (linkPage === currentPage) {
+        link.style.color = "#ffd700"; // optionnel (couleur)
+    }
+});
+
+</script>
+
+</body>
+</html>

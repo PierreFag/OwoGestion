@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Caisse Espèce</title>
+
+<style>
+body { font-family: Arial; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+th, td { border: 1px solid black; padding: 8px; }
+th { background: #eee; }
+
+.box {
+    padding: 10px;
+    margin: 10px 0;
+    background: #f5f5f5;
+}
+body {
+    margin: 0;
+    padding-top: 100px;
+    font-family: Arial;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #2c3e50;
+    padding: 15px;
+    color: white;
+    z-index: 1000;
+}
+
+nav a {
+    color: white;
+    margin-right: 20px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* 🔥 CONTENU */
+.container {
+    padding: 20px;
+}
+button {
+    padding: 10px;
+    background: #6a6b6c;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.card {
+    background: #f5f5f5;
+    padding: 20px;
+    margin: 10px;
+    display: inline-block;
+    width: 220px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.card a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+}
+#companyName, #projectName {
+    background: #2c3e50;;
+    margin-right: 40px;
+    margin-left: 0;
+    color: #ffd700;
+}
+.societe-ligne {
+    display: flex;
+    gap: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+    margin-left: 25%;
+}
+.projet-ligne {
+    display: flex;
+    gap: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+}
+
+
+.projet{
+    background: #2c3e50;
+}
+.right-box {
+    display: flex;
+    flex-direction: column; /* 🔥 empile verticalement */
+    align-items: flex-end;  /* 🔥 tout à droite */
+}
+
+
+#userBox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 40px;
+    margin-bottom: -15px;
+}
+
+#userPhoto {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* 🔥 rond */
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔥 MENU -->
+<header>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        
+        <div>
+                   <div style="display: flex;">
+            <div ><h2>💼 OwoGestion</h2></div>
+            <div class="societe-ligne">
+        <span style="font-weight:bold;">Société:</span>
+        <span id="companyName">HIRISPRODUCTION ET EDITION</span>
+        </div>
+                </div>
+            <nav>
+                  <nav>
+                <a href="register.html">Accueil</a>
+                <a href="budget.html" id="menu-budget">Budget</a>
+                <a href="indexPAGE.html">Coûts comptabilisés</a>
+                <a href="caisse.html">Dépenses en Espèce</a>
+                 <a href="approvisionnement.html" id="menu-appro">Approvisionnement caisse</a>
+
+                <a href="rapport.html" id="menu-rapport">Rapport de coûts</a>
+
+                <a href="financement.html" id="menu-financement">Financement</a>
+                <a href="balance.html" id="menu-balance">Balance</a>
+                <a href="paramettre.html" id="menu-paramettre">Paramètres</a>
+            </nav>
+            </nav>
+        </div>
+               <!-- 🔥 UTILISATEUR -->
+     <div class="right-box">
+    
+    <div class="projet-ligne">
+        <span style="font-weight:bold;">Projet :</span>
+        <span id="projectName">TASSI HANGBE</span>
+    </div>
+
+    <div id="userBox">
+        <a href="profil.html">
+            <img id="userPhoto" src="https://via.placeholder.com/40">
+        </a>
+        <div id="userName"></div>
+    </div>
+    <div id="userBox">
+               <button onclick="logout()" style="background-color: #2c3e50; color: red;margin-right: -10px;">Déconnexion</boutton>
+    </div>
+
+    </div>
+</header>
+
+<h1>💰 Caisse Espèce</h1>
+
+<!-- 🔥 APPRO CAISSE -->
+<a href="approvisionnement.html">➡ Voir les approvisionnements</a>
+
+<!-- 🔥 SOLDE -->
+<div class="box">
+    <strong>Total Approvisionnement : </strong> <span id="totalCaisse">0</span> FCFA<br>
+    <h2>💰 Solde Caisse : <span id="solde">0</span> FCFA</h2>
+</div>
+
+<hr>
+
+<h2>Dépenses en Espèce</h2>
+
+<table>
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Ligne Budget</th>
+    <th>Fournisseur</th>
+    <th>Prix</th>
+    <th>Description</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+<tfoot>
+        <tr style="background-color: gray;">
+            <td colspan="3" style="font-size: large"><strong>Total</strong></td>
+            <td id="totalDepense" style="font-size: large; font-weight: bold;">0</td>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, addDoc, collection, getDocs, getDoc,
+    deleteDoc, doc, query, where, onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+  authDomain: "owogestion-de436.firebaseapp.com",
+  projectId: "owogestion-de436",
+  storageBucket: "owogestion-de436.firebasestorage.app",
+  messagingSenderId: "357508008682",
+  appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const localUser = localStorage.getItem("userData");
+
+if (localUser) {
+  const data = JSON.parse(localUser);
+
+  afficherUser(data);
+}
+
+window.logout = () => {
+    localStorage.removeItem("userData"); // 🔥 important
+  signOut(auth).then(() => {
+    window.location.href = "index.html";
+  });
+};
+
+const tableBody = document.getElementById("tableBody");
+
+let totalDepense = 0;
+let totalCaisse = 0;
+
+// 🔥 AFFICHER DEPENSES ESPÈCE
+async function chargerDepenses() {
+
+    tableBody.innerHTML = "";
+    totalDepense = 0;
+
+    const snapshot = await getDocs(collection(db, "produits"));
+
+    snapshot.forEach(doc => {
+
+        const data = doc.data();
+
+        // 🔥 FILTRE ESPÈCE
+        if (data.type === "Espèce" && data.paye===true) {
+
+            totalDepense += parseFloat(data.prix) || 0;
+
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${data.id}</td>
+                <td>${data.numero || "-"}</td>
+                <td>${data.nom}</td>
+                <td>${Number(data.prix).toLocaleString("fr-FR")} FCFA</td>
+                <td>${data.desc}</td>
+            `;
+
+            tableBody.appendChild(tr);
+        }
+    });
+
+    document.getElementById("totalDepense").textContent = totalDepense.toLocaleString();
+}
+
+// 🔥 AJOUT APPRO CAISSE
+window.ajouterCaisse = async () => {
+
+    const montant = parseFloat(document.getElementById("montantCaisse").value);
+
+    if (!montant) {
+        alert("Entre un montant valide");
+        return;
+    }
+
+    await addDoc(collection(db, "caisse"), {
+        montant,
+        date: new Date()
+    });
+
+    document.getElementById("montantCaisse").value = "";
+
+    chargerCaisse();
+};
+
+// 🔥 CHARGER CAISSE
+async function chargerCaisse() {
+
+    totalCaisse = 0;
+
+    const snapshot = await getDocs(collection(db, "caisse"));
+
+    snapshot.forEach(doc => {
+        totalCaisse += doc.data().montant || 0;
+    });
+
+    document.getElementById("totalCaisse").textContent = totalCaisse.toLocaleString();
+
+    calculerSolde();
+}
+
+// 🔥 SOLDE
+function calculerSolde() {
+
+    const solde = totalCaisse - totalDepense;
+
+    document.getElementById("solde").textContent = solde.toLocaleString();
+}
+
+// 🔥 INIT
+async function init() {
+    await chargerDepenses();
+    await chargerCaisse();
+}
+onSnapshot(doc(db, "parametres", "config"), (snap) => {
+  if (snap.exists()) {
+    const data = snap.data();
+        document.getElementById("companyName").textContent =
+        snap.data().nomSociete || "Société";
+    
+        document.getElementById("projectName").textContent =
+      snap.data().nomProjet || "Projet";
+  }
+});
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    return location.href = "index.html";
+  }
+
+  // 🔥 récupérer user Firestore
+  const snap = await getDoc(doc(db, "users", user.uid));
+
+  if (!snap.exists()) {
+    alert("Utilisateur introuvable");
+    return signOut(auth);
+  }
+
+  const data = snap.data();
+
+  appliquerPermissionsMenu(data);
+
+  // 🔥 compte désactivé
+  if (!data.active) {
+    alert("Compte désactivé");
+    await signOut(auth);
+    return;
+  }
+
+
+  // 🔥 charger UI user
+  onSnapshot(doc(db, "users", user.uid), (snap) => {
+    if (snap.exists()) {
+      const data = snap.data();
+
+        localStorage.setItem("userData", JSON.stringify(data));
+        afficherUser(data);
+    }
+  });
+
+});
+
+function afficherUser(data) {
+ document.getElementById("userPhoto").src =
+          data.photo || "https://via.placeholder.com/40";
+
+        document.getElementById("userName").textContent =
+          data.prenom + " " + data.nom;
+}
+
+
+init();
+const links = document.querySelectorAll("nav a");
+
+// récupérer le nom de la page actuelle
+const currentPage = window.location.pathname.split("/").pop();
+
+links.forEach(link => {
+    const linkPage = link.getAttribute("href");
+
+    if (linkPage === currentPage) {
+        link.style.color = "#ffd700"; // optionnel (couleur)
+    }
+});
+
+function appliquerPermissionsMenu(data) {
+
+  if (data.role === "admin") return;
+
+  if (data.permissions?.budget === "none") {
+    document.getElementById("menu-budget")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-rapport")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-financement")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-appro")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-balance")?.remove();
+  }
+
+   if (data.permissions?.paramettre === "none") {
+    document.getElementById("menu-paramettre")?.remove();
+     }
+}
+</script>
+
+</body>
+</html>

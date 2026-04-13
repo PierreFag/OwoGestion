@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Coût comptabilisé</title>
+</head>
+<style>
+
+    tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+
+tbody tr:hover {
+    background-color: #c2c6c8; /* effet au survol */
+}
+    table {
+    width: 100%;
+    margin-top: 20px;
+}
+body {
+    margin: 0;
+    padding-top: 100px;
+    font-family: Arial;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #2c3e50;
+    padding: 15px;
+    margin: 0;
+    color: white;
+    z-index: 1000;
+}
+
+nav a {
+    color: white;
+    margin-right: 20px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* 🔥 CONTENU */
+.container {
+    padding: 20px;
+}
+
+.card {
+    background: #f5f5f5;
+    padding: 20px;
+    margin: 0px;
+    display: inline-block;
+    width: 30%;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.card a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+}
+/* 🔥 conteneur principal */
+.container {
+    width: 100%;
+    margin: auto;
+}
+
+/* 🔥 cartes 
+.card {
+    background: white;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}*/
+
+/* 🔥 formulaire en grille */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+/* champs pleine largeur */
+.full {
+    grid-column: span 2;
+}
+
+/* inputs */
+input, select, textarea {
+    width: 100%;
+    padding: 8px;
+}
+
+/* boutons */
+button {
+    padding: 10px;
+    background: #6a6b6c;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #343f4a;
+}
+
+#companyName, #projectName {
+    background: #2c3e50;;
+    margin-right: 40px;
+    margin-left: 0;
+    color: #ffd700;
+}
+.societe-ligne {
+    display: flex;
+    gap: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+    margin-left: 25%;
+}
+.projet-ligne {
+    display: flex;
+    gap: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+}
+.projet{
+    background: #2c3e50;
+}
+.right-box {
+    display: flex;
+    flex-direction: column; /* 🔥 empile verticalement */
+    align-items: flex-end;  /* 🔥 tout à droite */
+}
+
+
+#userBox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 40px;
+    margin-bottom: -15px;
+}
+
+#userPhoto {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* 🔥 rond */
+}
+/* 🔥 OVERLAY (fond sombre) */
+.modal-overlay {
+    display: none;
+    position:fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0,0,0,0.1);
+
+    justify-content: center;
+    align-items: center;
+
+    z-index: 2000;
+}
+
+/* 🔥 BOITE FLOTTANTE */
+.modal-box {
+    background: white;
+    width: 70%;
+    max-height: 80%;
+    border-radius: 10px;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+
+    animation: fadeIn 0.3s ease;
+    position: relative; /* sera changé en absolute au drag */
+}
+
+/* HEADER */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    background: #2c3e50;
+    color: white;
+    padding: 10px;
+    user-select: none;
+    cursor: move;
+}
+
+/* bouton fermer */
+.close-btn {
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* contenu scrollable */
+.modal-content {
+    padding: 15px;
+    overflow-y: auto;
+}
+
+/* animation */
+@keyframes fadeIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+input[type="checkbox"]:checked {
+    accent-color: #44678b; /* payé */
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔥 MENU -->
+<header>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        
+        <div>
+               <div style="display: flex;">
+            <div ><h2>💼 OwoGestion</h2></div>
+            <div class="societe-ligne">
+        <span style="font-weight:bold;">Société:</span>
+        <span id="companyName">HIRISPRODUCTION ET EDITION</span>
+        </div>
+                </div>
+              <nav>
+                <a href="register.html">Accueil</a>
+                <a href="budget.html" id="menu-budget">Budget</a>
+                <a href="indexPAGE.html">Coûts comptabilisés</a>
+                <a href="caisse.html">Dépenses en Espèce</a>
+                 <a href="approvisionnement.html" id="menu-appro">Approvisionnement caisse</a>
+
+                <a href="rapport.html" id="menu-rapport">Rapport de coûts</a>
+
+                <a href="financement.html" id="menu-financement">Financement</a>
+                <a href="balance.html" id="menu-balance">Balance</a>
+                <a href="paramettre.html" id="menu-paramettre">Paramètres</a>
+            </nav>
+        </div>
+       <!-- 🔥 UTILISATEUR -->
+     <div class="right-box">
+    
+    <div class="projet-ligne">
+        <span style="font-weight:bold;">Projet :</span>
+        <span id="projectName">TASSI HANGBE</span>
+    </div>
+
+    <div id="userBox">
+        <a href="profil.html">
+            <img id="userPhoto" src="https://via.placeholder.com/40">
+        </a>
+        <div id="userName"></div>
+    </div>
+    <div id="userBox">
+                <button onclick="logout()" style="background-color: #2c3e50; color: red;margin-right: -10px;">Déconnexion</boutton>
+    </div>
+
+</div>
+
+    </div>
+</header>
+<br><br>
+
+
+<div class="container">
+
+<!-- 🔥 AJOUT -->
+<div class="card">
+<h2>➕ Ajouter un coût</h2>
+
+<form id="form" class="form-grid">
+
+    <select id="numero" required class="full"></select>
+
+    <input type="text" id="nom" placeholder="Fournisseur">
+
+    <select id="type">
+        <option value="">Type de paiement</option>
+        <option>Espèce</option>
+        <option>Chèque</option>
+        <option>Virement</option>
+        <option>Mobile Money</option>
+    </select>
+
+    <input type="number" id="prix" placeholder="Prix">
+
+    <textarea id="desc" placeholder="Description" class="full"></textarea>
+
+    <!-- <input type="file" id="image" class="full"> -->
+    <input type="file" id="files" multiple class="full">
+    <div>
+        <label>Auto ID</label>
+        <select id="auto">
+            <option value="1">Activé</option>
+            <option value="0">Désactivé</option>
+        </select>
+    </div>
+
+    <input type="number" id="customId" placeholder="ID manuel">
+
+    <button type="submit" class="full">Ajouter</button>
+
+</form>
+</div>
+
+<!-- 🔥 SUPPRIMER -->
+<div class="card">
+<h2>🗑 Supprimer un coût</h2>
+
+<select id="deleteId" class="full">
+    <option value="">-- Choisir un produit --</option>
+</select>
+<button onclick="supprimerParId()">Supprimer</button>
+
+
+<br><br>
+<h2>🔎 Recherche</h2>
+
+<div class="form-grid">
+
+    <input type="text" id="searchNumero" placeholder="Ligne budget">
+
+    <input type="text" id="searchNom" placeholder="Fournisseur">
+
+    <select id="searchType">
+        <option value="">Type de paiement</option>
+        <option>Espèce</option>
+        <option>Chèque</option>
+        <option>Virement</option>
+        <option>Mobile Money</option>
+    </select>
+
+    <input type="number" id="searchPrix" placeholder="Prix max">
+
+    <input type="text" id="searchDesc" placeholder="Description" class="full">
+    <select id="searchPaye">
+    <option value="">Statut paiement</option>
+    <option value="true">Payé</option>
+    <option value="false">Non payé</option>
+</select>
+</div>
+
+
+</div>
+
+<!-- 🔥 MODIFIER -->
+<div class="card">
+<h2>✏ Modifier un coût</h2>
+
+<div class="form-grid">
+
+<select id="editId" class="full">
+    <option value="">-- Choisir un produit --</option>
+</select>
+
+<select id="numero1" class="full"></select>
+
+<input type="text" id="editNom" placeholder="Fournisseur">
+
+<select id="typePaiement">
+    <option value="">Type de paiement</option>
+    <option>Espèce</option>
+    <option>Chèque</option>
+    <option>Virement</option>
+    <option>Mobile Money</option>
+</select>
+
+<input type="number" id="editPrix" placeholder="Prix">
+
+<textarea id="editDesc" placeholder="Description" class="full"></textarea>
+
+<input type="file" id="editImage" class="full">
+
+<button onclick="modifierProduit()" class="full">
+    Modifier
+</button>
+
+</div>
+</div>
+
+</div>
+
+
+
+<!--<h1>Ajouter un produit</h1>
+
+<form id="form">
+    <select id="numero" required>
+    <option value="">--Ligne de budget--</option>
+
+    </select>
+    <br><br>
+    <input type="text" id="nom" placeholder="Fournisseur" required><br><br>
+    <select id="type" required>
+    <option value="">-- Type de paiement --</option>
+    <option value="Espèce">Espèce</option>
+    <option value="Chèque">Chèque</option>
+    <option value="Virement">Virement</option>
+    <option value="Mobile Money">Mobile Money</option>
+</select><br><br>
+    <input type="number" id="prix" placeholder="Prix" required><br><br>
+    <textarea id="desc" placeholder="Description" required></textarea><br><br>
+
+    <input type="file" id="image" ><br><br>
+
+    <label>Auto incrémentation :</label>
+    <select id="auto">
+        <option value="1">Activé</option>
+        <option value="0">Désactivé</option>
+    </select><br><br>
+
+    <input type="number" id="customId" placeholder="ID manuel" style="display:none"><br>
+
+    <button type="submit">Ajouter</button>
+</form>
+
+<hr>
+
+<h3>Supprimer un produit</h3>
+
+<input type="number" id="deleteId" placeholder="Entrer ID">
+<button onclick="supprimerParId()">Supprimer</button>
+<hr>
+
+<h3>Modifier un produit</h3>
+
+<input type="number" id="editId" placeholder="ID du produit"><br><br>
+<select id="numero1" required>
+    <option value="">--Ligne de budget--</option>
+</select>
+<br><br>
+<input type="text" id="editNom" placeholder="Nouveau fournisseur"><br><br>
+<select id="typePaiement" required>
+    <option value="">-- Type de paiement --</option>
+    <option value="Espèce">Espèce</option>
+    <option value="Chèque">Chèque</option>
+    <option value="Virement">Virement</option>
+    <option value="Mobile Money">Mobile Money</option>
+</select><br><br>
+<input type="number" id="editPrix" placeholder="Nouveau prix"><br><br>
+<textarea id="editDesc" placeholder="Nouvelle description"></textarea><br><br>
+<input type="file" id="editImage"><br><br>
+
+<button onclick="modifierProduit()">Modifier</button>
+
+<hr>-->
+
+
+<table border="2">
+    <thead style="background-color: grey;">
+        <tr>
+            <th>N°</th>
+            <th>Ligne de budget</th>
+            <th>Fichier</th>
+            <th>Fournisseurs</th>
+            <th>Type de paiement</th>
+            <th>Prix</th>
+            <th>Description</th>
+            <th>Payé</th>
+        </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+    <tfoot>
+        <tr style="background-color: gray;">
+            <td colspan="5" style="font-size: large"><strong>Total</strong></td>
+            <td id="totalPrix" style="font-size: large; font-weight: bold;">0</td>
+            <td colspan="1"></td>
+            <td></td>
+        </tr>
+    </tfoot>
+</table>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, addDoc, collection, getDocs, getDoc, setDoc,
+    deleteDoc, doc, query, where, onSnapshot, updateDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+
+// CONFIG FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+  authDomain: "owogestion-de436.firebaseapp.com",
+  projectId: "owogestion-de436",
+  storageBucket: "owogestion-de436.firebasestorage.app",
+  messagingSenderId: "357508008682",
+  appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+window.logout = () => {
+    localStorage.removeItem("userData"); // 🔥 important
+  signOut(auth).then(() => {
+    window.location.href = "index.html";
+  });
+};
+
+const localUser = localStorage.getItem("userData");
+
+if (localUser) {
+  const data = JSON.parse(localUser);
+
+  afficherUser(data);
+}
+
+// DOM
+const form = document.getElementById("form");
+const tableBody = document.getElementById("tableBody");
+const autoSelect = document.getElementById("auto");
+const customIdInput = document.getElementById("customId");
+
+// afficher/masquer ID manuel
+autoSelect.addEventListener("change", () => {
+    customIdInput.style.display = autoSelect.value == "0" ? "block" : "none";
+});
+
+let usersMap = {};
+
+async function chargerUsers() {
+    const snap = await getDocs(collection(db, "users"));
+
+    snap.forEach(doc => {
+        const data = doc.data();
+        usersMap[doc.id] = data.prenom + " " + data.nom;
+    });
+}
+function formatDate(date) {
+    if (!date) return "En cours..."; // 🔥 pendant que Firestore calcule
+
+    if (date.toDate) {
+        return date.toDate().toLocaleString("fr-FR");
+    }
+
+    return "N/A";
+}
+async function chargerFichiers() {
+    
+    const snapshot = await getDocs(collection(db, "fichiers"));
+    fichiersMap={};
+    snapshot.forEach(docItem => {
+        const f = docItem.data();
+
+        if (!fichiersMap[f.produitId]) {
+            fichiersMap[f.produitId] = [];
+        }
+
+        fichiersMap[f.produitId].push({
+            id: docItem.id,
+            ...f
+        });
+    });
+}
+let currentProduitId = null;
+window.ouvrirFichiers = async (produitId) => {
+    currentProduitId = produitId; // 🔥 on mémorise
+    const container = document.getElementById("listeFichiers");
+    container.innerHTML = "";
+
+    document.getElementById("modal").style.display = "flex";
+
+    // 🔥 récupération locale (SANS Firestore)
+    const fichiers = fichiersMap[produitId] || [];
+    if (fichiers.length === 0) {
+    container.innerHTML = "Aucun fichier pour ce produit";
+    return;
+}
+    container.innerHTML="";
+
+    fichiers.forEach(f => {
+
+        const div = document.createElement("div");
+
+        div.innerHTML = `
+            📄 ${f.filename}<br>
+            <button onclick="voirFichier('${f.url}')">Voir</button>
+            <button onclick="downloadFile('${f.url}')">Télécharger</button>
+            <button onclick="supprimerFichier('${f.id}')">Supprimer</button>
+            <hr>
+        `;
+
+        container.appendChild(div);
+    });
+    console.log("Produit ID:", produitId);
+console.log("Fichiers trouvés:", fichiersMap[produitId]);
+};
+// 🔥 AJOUT PRODUIT
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const nom = document.getElementById("nom").value;
+    const type = document.getElementById("type").value;
+    const prix = parseInt(document.getElementById("prix").value);
+    const desc = document.getElementById("desc").value;
+    const numero = document.getElementById("numero").value;
+    // const fileInput = document.getElementById("image");
+    const files = document.getElementById("files").files;
+// const file = fileInput.files[0];
+const user = auth.currentUser;
+
+
+try {
+
+        // Gestion ID
+    
+    let finalId;
+    if (autoSelect.value == "1") {
+        const snapshot = await getDocs(collection(db, "produits"));
+        let maxId = 0;
+
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            if (d.id && d.id > maxId) {
+                maxId = d.id;
+            }
+        });
+
+        finalId = maxId + 1;
+    } else {
+        const customId = customIdInput.value;
+
+        if (!customId) {
+            alert("Entre un ID !");
+            return;
+        }
+
+        finalId = parseInt(customId);
+    }
+    // 🔥 UPLOAD UNIQUEMENT SI FICHIER EXISTE
+    // if (file) {
+
+    //     const formData = new FormData();
+    //     formData.append("file", file);
+    //     formData.append("upload_preset", "mon_formulaire");
+
+    //     const res = await fetch("https://api.cloudinary.com/v1_1/dbp6jdmxz/auto/upload", {
+    //         method: "POST",
+    //         body: formData
+    //     });
+
+    //     const data = await res.json();
+
+    //     if (!data.secure_url) {
+    //         alert("Erreur Cloudinary");
+    //         console.error(data);
+    //         return;
+    //     }
+
+    //     imageUrl = data.secure_url;
+    //     filename = file.name;
+    // }
+
+    const produitRef=await addDoc(collection(db, "produits"), {
+        id: finalId,
+        numero,
+        nom,
+        type,
+        prix,
+        desc,
+        paye: false,
+        createdBy: user ? user.uid : null,
+    createdAt: serverTimestamp(),
+
+    updatedBy: user ? user.uid : null,
+    updatedAt: serverTimestamp()
+
+    });
+
+    if(files.length>0){
+    for (let file of files) {
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "OwoGestion_upload");
+    formData.append("folder", "JUSTIFICATIFS"); 
+
+    const res = await fetch("https://api.cloudinary.com/v1_1/dbp6jdmxz/auto/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+
+    
+        if (data.secure_url) {
+        const fileId=await addDoc(collection(db, "fichiers"), {
+            produitId: produitRef.id,
+            url: data.secure_url,
+            filename: file.name,
+            type: file.type,
+            createdAt: serverTimestamp()
+        });
+    }
+        if (!data.secure_url) {
+            alert("Erreur Cloudinary");
+            console.error(data);
+            return;
+        }
+    }
+}
+    await chargerFichiers();
+        afficherProduits();
+     
+
+    // 🔥 SAUVEGARDE FIRESTORE (image optionnelle)
+   
+
+    alert("Produit ajouté !");
+    form.reset();
+    customIdInput.style.display = "none";
+
+    afficherProduits();
+    } catch (err) {
+        console.error(err);
+        alert("Erreur !");
+    }
+});
+
+
+// 🔥 AFFICHAGE TABLE
+async function afficherProduits() {
+    tableBody.innerHTML = "";
+
+    const snapshot = await getDocs(collection(db, "produits"));
+    await getDocs(collection(db, "fichiers"));
+    let produits = [];
+    let total = 0; // 🔥 total
+
+    snapshot.forEach(docItem => {
+        produits.push({
+        ...docItem.data(),
+        firestoreId: docItem.id
+        });
+    });
+
+    // 🔥 récupérer valeurs recherche
+    const sNumero = document.getElementById("searchNumero").value.toLowerCase();
+    const sNom = document.getElementById("searchNom").value.toLowerCase();
+    const sType = document.getElementById("searchType").value;
+    const sPrix = document.getElementById("searchPrix").value;
+    const sDesc = document.getElementById("searchDesc").value.toLowerCase();
+    const sPaye = document.getElementById("searchPaye").value;
+    // 🔥 FILTRAGE
+    produits = produits.filter(p => {
+
+        return (
+            (!sNumero || (p.numero || "").toLowerCase().includes(sNumero)) &&
+            (!sNom || (p.nom || "").toLowerCase().includes(sNom)) &&
+            (!sType || p.type === sType) &&
+            (!sPrix || p.prix <= parseFloat(sPrix)) &&
+            (!sDesc || (p.desc || "").toLowerCase().includes(sDesc)) &&
+            (!sPaye || String(p.paye) === sPaye)
+        );
+
+    });
+
+    // 🔥 TRI PAR ID (ordre croissant)
+    //produits.sort((a, b) => a.id - b.id);
+
+    // TRI PAR ID (décroissant)
+    produits.sort((a, b) => b.id - a.id);
+
+    produits.forEach(data => {
+        const createdName = usersMap[data.createdBy] || "Inconnu";
+        const updatedName = usersMap[data.updatedBy] || "Inconnu";
+        const fichiers = fichiersMap[data.firestoreId] || [];
+         // 🔥 addition des prix
+        total += parseFloat(data.prix) || 0;
+
+        const tr = document.createElement("tr");
+
+        tr.title = `
+        Ajouté par : ${createdName}
+        Le : ${formatDate(data.createdAt)}
+
+Modifié par : ${updatedName}
+        Le : ${formatDate(data.updatedAt)}
+        `;
+
+        tr.innerHTML = `
+            <td>${data.id}</td>
+            <td>${data.numero || "-"}</td>       
+            <td>
+            <button class="btn-files" data-id="${data.firestoreId}">
+            📎 ${fichiers.length} fichier(s)
+            </button>
+            </td>
+
+            <td>${data.nom}</td>
+            <td>${data.type}</td>
+            <td>${Number(data.prix).toLocaleString("fr-FR")} FCFA</td>
+            <td>${data.desc}</td>
+            <td>
+                <input type="checkbox" 
+                ${data.paye ? "checked" : ""} 
+                onchange="togglePaye('${data.firestoreId}', this.checked)">
+            </td>
+        `;
+
+        tableBody.appendChild(tr);
+    });
+     // 🔥 afficher total
+    document.getElementById("totalPrix").textContent = Number(total.toFixed(2)).toLocaleString("fr-FR")+" FCFA";
+}
+
+window.togglePaye = async (id, statut) => {
+    try {
+        await updateDoc(doc(db, "produits", id), {
+            paye: statut,
+            updatedAt: new Date()
+        });
+
+        console.log("Statut mis à jour :", statut);
+
+    } catch (err) {
+        console.error(err);
+        alert("Erreur mise à jour paiement");
+    }
+};
+
+// 🔥 SUPPRESSION PAR ID
+window.supprimerParId = async () => {
+    const id = parseInt(document.getElementById("deleteId").value);
+
+    if (!id) {
+        alert("Entre un ID valide");
+        return;
+    }
+
+    // 🔥 CONFIRMATION
+    const confirmation = confirm("Voulez-vous vraiment supprimer le produit avec ID = " + id + " ?");
+
+    if (!confirmation) {
+        return; // annuler suppression
+    }
+
+    try {
+        const q = query(collection(db, "produits"), where("id", "==", id));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+            alert("Aucun produit trouvé avec cet ID");
+            return;
+        }
+
+        snapshot.forEach(async (docItem) => {
+            await deleteDoc(doc(db, "produits", docItem.id));
+        });
+
+        alert("Produit supprimé !");
+        afficherProduits();
+
+    } catch (err) {
+        console.error(err);
+        alert("Erreur suppression");
+    }
+};
+
+// Modifier
+window.modifierProduit = async () => {
+
+    const id = parseInt(document.getElementById("editId").value);
+    const nom = document.getElementById("editNom").value;
+    const type = document.getElementById("typePaiement").value;
+    const prix = document.getElementById("editPrix").value;
+    const desc = document.getElementById("editDesc").value;
+    const files = document.getElementById("editImage").files;
+    const numero = document.getElementById("numero1").value;
+    const user = auth.currentUser;
+
+    if (!id) {
+        alert("Entre un ID valide");
+        return;
+    }
+
+    if (!confirm("Modifier le produit ID = " + id + " ?")) {
+        return;
+    }
+
+    try {
+        const q = query(collection(db, "produits"), where("id", "==", id));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+            alert("Produit introuvable");
+            return;
+        }
+
+        snapshot.forEach(async (docItem) => {
+
+            let updateData = {};
+
+            if (nom) updateData.nom = nom;
+            if (type) updateData.type = type;
+            if (prix) updateData.prix = prix;
+            if (desc) updateData.desc = desc;
+            if (numero) updateData.numero = numero;
+            // 🔥 AJOUT / REMPLACEMENT IMAGE SI FOURNIE
+            if (files.length>0) {
+                for(let file of files){
+
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", "OwoGestion_upload");
+                formData.append("folder", "JUSTIFICATIFS");
+
+                const res = await fetch("https://api.cloudinary.com/v1_1/dbp6jdmxz/auto/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.secure_url) {
+            await addDoc(collection(db, "fichiers"), {
+                produitId: docItem.id, // 🔥 Firestore ID
+                url: data.secure_url,
+                filename: file.name,
+                type: file.type,
+                createdAt: serverTimestamp()
+                });
+                }
+            }
+        }
+            updateData.updatedBy = user ? user.uid : null;
+            updateData.updatedAt = new Date();
+            await updateDoc(doc(db, "produits", docItem.id), updateData);
+            await chargerFichiers();
+        afficherProduits();
+
+        });
+
+        alert("Produit modifié !");
+        // 🔥 recharge les fichiers de Firestore
+        
+
+    } catch (err) {
+        console.error(err);
+        alert("Erreur modification");
+    }
+};
+//charger les lignes
+async function chargerLignesBudget() {
+    const select = document.getElementById("numero1");
+    select.innerHTML = '<option value="">--Ligne de budget--</option>';
+    const snapshot = await getDocs(collection(db, "budget"));
+
+    let lignes = [];
+
+    snapshot.forEach(docItem => {
+        lignes.push(docItem.data());
+    });
+
+    // 🔥 tri hiérarchique
+    lignes.sort((a, b) => a.numero.localeCompare(b.numero));
+
+    lignes.forEach(ligne => {
+
+        const option = document.createElement("option");
+
+        // 🔥 indentation visuelle
+        let indent = "";
+        if (ligne.numero.length > 1) {
+            indent = "&nbsp;&nbsp;&nbsp;".repeat(ligne.numero.length - 1);
+        }
+
+        option.value = ligne.numero;
+
+        option.innerHTML = indent + ligne.numero + " - " + ligne.libelle;
+
+        select.appendChild(option);
+    });
+}
+
+async function chargerLignerBudget() {
+    const select = document.getElementById("numero");
+    select.innerHTML = '<option value="">--Ligne de budget--</option>';
+    const snapshot = await getDocs(collection(db, "budget"));
+
+    let lignes = [];
+
+    snapshot.forEach(docItem => {
+        lignes.push(docItem.data());
+    });
+
+    // 🔥 tri hiérarchique
+    lignes.sort((a, b) => a.numero.localeCompare(b.numero));
+
+    lignes.forEach(ligne => {
+
+        const option = document.createElement("option");
+
+        // 🔥 indentation visuelle
+        let indent = "";
+        if (ligne.numero.length > 1) {
+            indent = "&nbsp;&nbsp;&nbsp;".repeat(ligne.numero.length - 1);
+        }
+
+        option.value = ligne.numero;
+
+        option.innerHTML = indent + ligne.numero + " - " + ligne.libelle;
+
+        select.appendChild(option);
+    });
+}
+
+async function chargerProduitsSelect() {
+
+    const deleteSelect = document.getElementById("deleteId");
+    const editSelect = document.getElementById("editId");
+
+    deleteSelect.innerHTML = '<option value="">-- Choisir un produit --</option>';
+    editSelect.innerHTML = '<option value="">-- Choisir un produit --</option>';
+
+    const snapshot = await getDocs(collection(db, "produits"));
+
+    let produits = [];
+
+    snapshot.forEach(docItem => {
+        produits.push(docItem.data());
+    });
+
+    // 🔥 tri par ID
+    produits.sort((a, b) => a.id - b.id);
+
+    produits.forEach(p => {
+
+        const label = `${p.id} - ${p.nom} (${p.prix} FCFA)`;
+
+        // 🔴 supprimer
+        const opt1 = document.createElement("option");
+        opt1.value = p.id;
+        opt1.textContent = label;
+        deleteSelect.appendChild(opt1);
+
+        // ✏️ modifier
+        const opt2 = document.createElement("option");
+        opt2.value = p.id;
+        opt2.textContent = label;
+        editSelect.appendChild(opt2);
+    });
+}
+onSnapshot(doc(db, "parametres", "config"), (snap) => {
+  if (snap.exists()) {
+    const data = snap.data();
+        document.getElementById("companyName").textContent =
+        snap.data().nomSociete || "Société";
+    
+        document.getElementById("projectName").textContent =
+      snap.data().nomProjet || "Projet";
+  }
+});
+
+onAuthStateChanged(auth, async (user) => {
+if (user) {
+
+    onSnapshot(doc(db, "users", user.uid), (snap) => {
+
+      if (snap.exists()) {
+        const data = snap.data();
+
+        appliquerPermissionsMenu(data);
+
+     localStorage.setItem("userData", JSON.stringify(data));
+
+    afficherUser(data);
+      
+  //     document.getElementById("preview").src =
+  // data.photo || "https://via.placeholder.com/120";
+        console.log("Auth OK");
+      }
+      });
+  } else {
+    window.location.href = "index.html";
+  }
+});
+
+function afficherUser(data) {
+    const userName = document.getElementById("userName");
+    const userPhoto = document.getElementById("userPhoto");
+
+    userName.textContent = data.prenom + " " + data.nom;
+    userPhoto.src = data.photo || "https://via.placeholder.com/40";
+}
+
+function appliquerPermissionsMenu(data) {
+
+  if (data.role === "admin") return;
+
+  if (data.permissions?.budget === "none") {
+    document.getElementById("menu-budget")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-rapport")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-financement")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-appro")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-balance")?.remove();
+  }
+
+   if (data.permissions?.paramettre === "none") {
+    document.getElementById("menu-paramettre")?.remove();
+     }
+}
+// 🔥 TELECHARGEMENT
+/*window.telecharger = (url, filename) => {
+    const downloadUrl = url.replace("/upload/", "/upload/fl_attachment:" + filename + "/");
+    window.open(downloadUrl, "_blank");
+};*/
+
+window.downloadFile = (url) => {
+    const downloadUrl = url.replace("/upload/", "/upload/fl_attachment/");
+    // const a = document.createElement("a");
+    // a.href = downloadUrl;
+    // a.target = "_blank";
+    // a.click();
+    window.open(downloadUrl, "_blank");
+};
+let fichiersMap = {};
+
+
+// INIT
+await chargerUsers();
+chargerLignerBudget();
+chargerLignesBudget();
+await chargerFichiers();
+afficherProduits();
+chargerProduitsSelect();
+
+const links = document.querySelectorAll("nav a");
+
+// récupérer le nom de la page actuelle
+const currentPage = window.location.pathname.split("/").pop();
+
+links.forEach(link => {
+    const linkPage = link.getAttribute("href");
+
+    if (linkPage === currentPage) {
+        link.style.color = "#ffd700"; // optionnel (couleur)
+    }
+});
+
+
+window.fermerModal = () => {
+    document.getElementById("modal").style.display = "none";
+};
+window.voirFichier = (url) => {
+    window.open(url, "_blank");
+};
+const modal = document.querySelector(".modal-box");
+const header = document.getElementById("modalHeader");
+
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+header.addEventListener("mousedown", (e) => {
+    isDragging = true;
+
+    const rect = modal.getBoundingClientRect();
+
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    modal.style.position = "absolute"; // 🔥 permet déplacement
+});
+
+document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    modal.style.left = (e.clientX - offsetX) + "px";
+    modal.style.top = (e.clientY - offsetY) + "px";
+});
+
+document.addEventListener("mouseup", () => {
+    isDragging = false;
+});
+window.supprimerFichier = async (fileId) => {
+
+    if (!confirm("Supprimer ce fichier ?")) return;
+
+    try {
+        await deleteDoc(doc(db, "fichiers", fileId));
+
+        alert("Fichier supprimé");
+
+        // 🔥 recharge les fichiers
+        await chargerFichiers();
+
+        // 🔥 réaffiche les fichiers du produit actuel
+        if (currentProduitId) {
+            ouvrirFichiers(currentProduitId);
+        }
+        afficherProduits();
+
+    } catch (err) {
+        console.error(err);
+        alert("Erreur suppression");
+    }
+};
+
+// afficher fichiers
+document.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("btn-files")) {
+        const produitId = e.target.getAttribute("data-id");
+        ouvrirFichiers(produitId);
+    }
+});
+
+const inputs = document.querySelectorAll(
+    "#searchNumero, #searchNom, #searchType, #searchPrix, #searchDesc, #searchPaye"
+);
+
+inputs.forEach(input => {
+    input.addEventListener("input", afficherProduits);
+});
+</script>
+<!-- 🔥 MODAL FLOTTANT -->
+<div id="modal" class="modal-overlay">
+
+  <div class="modal-box">
+
+    <div class="modal-header" id="modalHeader">
+      <h3>Fichiers du coûts</h3>
+      <span class="close-btn" onclick="fermerModal()">✖</span>
+    </div>
+
+    <div class="modal-content">
+        <div id="listeFichiers"></div>
+  </div>
+
+</div>
+
+</body>
+</html>

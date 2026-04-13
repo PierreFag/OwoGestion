@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Connexion / Inscription Firebase</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    input {
+      display: block;
+      margin-bottom: 10px;
+      padding: 8px;
+      width: 100%;
+    }
+    .toggle {
+      color: blue;
+      cursor: pointer;
+      margin-top: 10px;
+      text-decoration: underline;
+    }
+   html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* HERO */
+.hero {
+  display: flex;
+  height: 100vh;
+  position:relative; /* 🔥 important */
+  padding: 50px;
+}
+
+/* base */
+.hero-left {
+  flex: 1;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* 🔥 effet hover */
+
+.hero-left h1 {
+  font-size: 40px;
+  color: aliceblue;
+}
+
+.hero-left ul {
+  margin-top: 20px;
+  font-size: 20px;
+  color: aliceblue;
+}
+
+.hero-left p{
+  font-size: 20px;
+
+
+}
+
+/* .hero-right {
+  background: white;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  margin-left: -50px;
+} */
+.hero-right {
+    position: absolute;
+    z-index: 2;
+    right: 50px;
+    top: 30%;
+
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 600px;
+}
+
+.hero-right:hover {
+  z-index: 10;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  transform: scaleX(1.2);
+  transition: all 0.5s ease;
+}
+
+form input {
+  display: block;
+  margin-bottom: 10px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+button {
+  padding: 12px;
+  background: #2c3e50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+button:hover {
+  background: #1a252f;
+}
+
+.toggle {
+  color: blue;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* FEATURES */
+.features {
+  padding: 50px;
+  text-align: center;
+}
+.features h2 {
+  color: aliceblue;
+}
+.pricing h2 {
+  color: aliceblue;
+}
+.grid {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 250px;
+}
+
+/* PRICING */
+.pricing {
+  padding: 50px;
+  text-align: center;
+}
+
+.price-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 250px;
+}
+
+.price {
+  font-size: 24px;
+  color: #2c3e50;
+}
+
+.premium {
+  border: 2px solid #2c3e50;
+  transform: scale(1.05);
+}
+.hero1{
+  background: linear-gradient(35deg, #36524d 0%, #252d4e 100%);
+}
+#title {
+    text-align: center;
+    margin-bottom: 20px; 
+}
+  </style>
+</head>
+<body>
+
+  <section class="hero1">
+<!-- 🔥 HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <h1>💼 Avec <a style="color: aliceblue;" href="" target="_blank">OwoGestion</a>,  Gérez vos finances simplement</h1>
+    <p style="color: aliceblue;">
+      Suivez vos dépenses, vos coûts et vos paiements en temps réel.
+      Un outil puissant, simple et conçu pour votre activité.
+    </p>
+
+    <ul>
+      <li>✔ Suivi des coûts en temps réel</li>
+      <li>✔ Gestion des paiements (payé / non payé)</li>
+      <li>✔ Stockage sécurisé des fichiers</li>
+      <li>✔ Interface simple et rapide</li>
+    </ul>
+    <div class="hero-right">
+    <h2 id="title">Inscription</h2>
+
+    <form id="form">
+      <input type="text" id="nom" placeholder="Nom" class="register-only">
+      <input type="text" id="prenom" placeholder="Prénom" class="register-only">
+      <input type="text" id="fonction" placeholder="Fonction" class="register-only">
+
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Mot de passe" required>
+
+      <button type="submit">S'inscrire</button>
+    </form>
+
+    <p class="toggle" id="toggle">Déjà un compte ?</p>
+  </div>
+
+  </div>
+
+  
+</section>
+
+<!-- 🔥 AVANTAGES -->
+<section class="features">
+  <h2>Pourquoi choisir notre solution ?</h2>
+
+  <div class="grid">
+    <div class="card">
+      <h3>📊 Suivi intelligent</h3>
+      <p>Visualisez tous vos coûts et vos dépenses en un seul endroit.</p>
+    </div>
+
+    <div class="card">
+      <h3>⚡ Rapide</h3>
+      <p>Ajoutez, modifiez et recherchez vos données instantanément.</p>
+    </div>
+
+    <div class="card">
+      <h3>🔒 Sécurisé</h3>
+      <p>Vos données sont protégées et accessibles uniquement par vous.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 🔥 PRIX -->
+<section class="pricing">
+  <h2>💰 Nos offres</h2>
+
+  <div class="grid">
+
+    <div class="price-card">
+      <h3>Gratuit</h3>
+      <p class="price">0 FCFA</p>
+      <ul>
+        <li>✔ 50 enregistrements</li>
+        <li>✔ Gestion basique</li>
+      </ul>
+      <button>Commencer</button>
+    </div>
+
+    <div class="price-card premium">
+      <h3>Pro</h3>
+      <p class="price"> --- FCFA / mois</p>
+      <ul>
+        <li>✔ Enregistrements illimités</li>
+        <li>✔ Gestion des fichiers</li>
+        <li>✔ Statut paiement</li>
+      </ul>
+      <button>S’abonner</button>
+    </div>
+
+    <div class="price-card">
+      <h3>Entreprise</h3>
+      <p class="price">Sur mesure</p>
+      <ul>
+        <li>✔ Multi-utilisateurs</li>
+        <li>✔ Support dédié</li>
+      </ul>
+      <button>Contact</button>
+    </div>
+
+  </div>
+</section>
+<div style="background-color: #2c3e50; color: aliceblue; text-align: center;justify-content: center; margin: 10px;padding: 10px;">
+  <br><br>
+  <p style="font-size: 20px;"><strong>Contact</strong></p>
+  <p>_______</p>
+  <div>
+    
+    <div>Pierre FAGBOHOUN
+      <div>CEO of OwoGestion</div>
+      <p>_______</p>
+    <div>+229 01 90 93 80 51</div>
+    <div>pierrefagbohoun@gmail.com</div> 
+    </div>
+  </div>
+<br><br>
+</div>
+<div style="text-align: center; margin-top: 20px; font-size: 20px; color: #777;">
+  <i class="fa fa-copyright" aria-hidden="false"></i>Copyright 2026 OwoGestion. Tous droits réservés.
+</div>
+</section>
+
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    sendEmailVerification,
+    onAuthStateChanged,setPersistence, browserSessionPersistence
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  import {
+    getFirestore,
+    setDoc,
+    doc
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+   apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+  authDomain: "owogestion-de436.firebaseapp.com",
+  projectId: "owogestion-de436",
+  storageBucket: "owogestion-de436.firebasestorage.app",
+  messagingSenderId: "357508008682",
+  appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  await setPersistence(auth, browserSessionPersistence);
+  const db = getFirestore(app);
+
+  const form = document.getElementById("form");
+  const toggle = document.getElementById("toggle");
+  const title = document.getElementById("title");
+  const registerFields = document.querySelectorAll(".register-only");
+
+  let isLogin = false;
+
+
+  toggle.onclick = () => {
+    isLogin = !isLogin;
+
+    registerFields.forEach(el => {
+      el.style.display = isLogin ? "none" : "block";
+    });
+
+    title.textContent = isLogin ? "Connexion" : "Inscription";
+    form.querySelector("button").textContent = isLogin ? "Se connecter" : "S'inscrire";
+    toggle.textContent = isLogin ? "Créer un compte" : "Déjà un compte ?";
+  };
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    if (isLogin) {
+      // 🔐 CONNEXION
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        if (!user.emailVerified) {
+          alert("Veuillez vérifier votre email avant de vous connecter.");
+          return;
+        }
+
+        // alert("Connexion réussie !");
+        window.location.href = "register.html";
+
+      } catch (error) {
+        console.error(error);
+        alert(error.message);
+      }
+
+    } else {
+      // 📝 INSCRIPTION
+      const nom = document.getElementById("nom").value;
+      const prenom = document.getElementById("prenom").value;
+      const fonction = document.getElementById("fonction").value;
+      const email = document.getElementById("email").value;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // 📧 Vérification email
+        await sendEmailVerification(user);
+
+        // 💾 Sauvegarde Firestore
+        await setDoc(doc(db, "users", user.uid), {
+        nom,
+        prenom,
+        email,
+        fonction,
+        photo: "" // 🔥 important
+       });
+
+        alert("Compte créé ! Vérifiez votre email avant de vous connecter.");
+
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    form.reset();
+  });
+
+  let timeout;
+
+function resetTimer() {
+    clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+        alert("Session expirée (10 min d'inactivité)");
+        auth.signOut().then(() => {
+            window.location.href = "index.html";
+        });
+    }, 10 * 60 * 1000); // 10 minutes
+}
+
+// 🔥 détecter activité utilisateur
+["click", "mousemove", "keypress", "scroll", "touchstart"].forEach(event => {
+    document.addEventListener(event, resetTimer);
+});
+
+// lancer au début
+
+resetTimer();
+
+</script>
+
+</body>
+</html>

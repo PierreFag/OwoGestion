@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Rapport de coût</title>
+
+<style>
+body { font-family: Arial; }
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: center;
+}
+
+th { background: #eee; }
+
+input {
+    width: 100px;
+}
+
+.negative { background-color: #ffcccc; }
+.positive { background-color: #ccffcc; }
+body {
+    margin: 0;
+    padding-top: 100px;
+    font-family: Arial;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #2c3e50;
+    padding: 15px;
+    color: white;
+    z-index: 1000;
+}
+
+nav a {
+    color: white;
+    margin-right: 20px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* 🔥 CONTENU */
+.container {
+    padding: 20px;
+}
+button {
+    padding: 10px;
+    background: #6a6b6c;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.card {
+    background: #f5f5f5;
+    padding: 20px;
+    margin: 10px;
+    display: inline-block;
+    width: 220px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.card a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+}
+#companyName, #projectName {
+    background: #2c3e50;;
+    margin-right: 40px;
+    margin-left: 0;
+    color: #ffd700;
+}
+.projet{
+    background: #2c3e50;
+}
+.projet{
+    background: #2c3e50;
+}
+.right-box {
+    display: flex;
+    flex-direction: column; /* 🔥 empile verticalement */
+    align-items: flex-end;  /* 🔥 tout à droite */
+}
+
+.societe-ligne {
+    display: flex;
+    gap: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+    margin-left: 25%;
+}
+.projet-ligne {
+    display: flex;
+    gap: 5px;
+    font-size: 18px;
+    margin-bottom: 10px;
+    margin-right: 0px;
+}
+
+#userBox {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-right: 40px;
+    margin-bottom: -15px;
+}
+#userPhoto {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* 🔥 rond */
+}
+/* 🔥 OVERLAY (fond sombre) */
+.modal-overlay {
+    display: none;
+    position:fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0,0,0,0.1);
+
+    justify-content: center;
+    align-items: center;
+
+    z-index: 2000;
+}
+
+/* 🔥 BOITE FLOTTANTE */
+.modal-box {
+    background: white;
+    width: 70%;
+    max-height: 80%;
+    border-radius: 10px;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+
+    animation: fadeIn 0.3s ease;
+    position: relative; /* sera changé en absolute au drag */
+}
+
+/* HEADER */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    background: #2c3e50;
+    color: white;
+    padding: 10px;
+    user-select: none;
+    cursor: move;
+}
+
+/* bouton fermer */
+.close-btn {
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* contenu scrollable */
+.modal-content {
+    padding: 15px;
+    overflow-y: auto;
+}
+
+/* animation */
+@keyframes fadeIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+#totalEngage,#totalReste, #totalProbable, #totalEcart{
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🔥 MENU -->
+<header>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        
+        <div>
+             <div style="display: flex;">
+            <div ><h2>💼 OwoGestion</h2></div>
+            <div class="societe-ligne">
+        <span style="font-weight:bold;">Société:</span>
+        <span id="companyName">HIRISPRODUCTION ET EDITION</span>
+        </div>
+                </div>
+            <nav>
+                  <nav>
+                <a href="register.html">Accueil</a>
+                <a href="budget.html" id="menu-budget">Budget</a>
+                <a href="indexPAGE.html">Coûts comptabilisés</a>
+                <a href="caisse.html">Dépenses en Espèce</a>
+                 <a href="approvisionnement.html" id="menu-appro">Approvisionnement caisse</a>
+
+                <a href="rapport.html" id="menu-rapport">Rapport de coûts</a>
+
+                <a href="financement.html" id="menu-financement">Financement</a>
+                <a href="balance.html" id="menu-balance">Balance</a>
+                <a href="paramettre.html" id="menu-paramettre">Paramètres</a>
+            </nav>
+            </nav>
+        </div>
+           <!-- 🔥 UTILISATEUR -->
+     <div class="right-box">
+    
+    <div class="projet-ligne">
+        <span style="font-weight:bold;">Projet :</span>
+        <span id="projectName">TASSI HANGBE</span>
+    </div>
+
+    <div id="userBox">
+        <a href="profil.html">
+            <img id="userPhoto" src="https://via.placeholder.com/40">
+        </a>
+        <div id="userName"></div>
+    </div>
+    <div id="userBox">
+                <button onclick="logout()" style="background-color: #2c3e50; color: red;margin-right: -10px;">Déconnexion</boutton>
+    </div>
+
+</div>
+    </div>
+</header>
+
+<h1>📊 Rapport de coût</h1>
+
+<table>
+<thead>
+<tr>
+    <th>N° ligne</th>
+    <th>Libellé</th>
+    <th>Budget validé</th>
+    <th>Déjà engagé</th>
+    <th>Reste à engager</th>
+    <th>Coût probable</th>
+    <th>Écart</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+<tfoot>
+<tr style="background-color: #eee;">
+    <td colspan="2"><strong>TOTAL</strong></td>
+    <td style="font-weight: bold;" id="totalBudget"></td>
+    <td id="totalEngage"></td>
+    <td id="totalReste"></td>
+    <td id="totalProbable"></td>
+    <td id="totalEcart"></td>
+</tr>
+</tfoot>
+</table>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, addDoc, collection, getDocs, getDoc,
+    deleteDoc, doc, query, where, onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// CONFIG FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+  authDomain: "owogestion-de436.firebaseapp.com",
+  projectId: "owogestion-de436",
+  storageBucket: "owogestion-de436.firebasestorage.app",
+  messagingSenderId: "357508008682",
+  appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+
+const localUser = localStorage.getItem("userData");
+
+if (localUser) {
+  const data = JSON.parse(localUser);
+
+  afficherUser(data);
+}
+
+window.logout = () => {
+    localStorage.removeItem("userData"); // 🔥 important
+  signOut(auth).then(() => {
+    window.location.href = "index.html";
+  });
+};
+onSnapshot(doc(db, "parametres", "config"), (snap) => {
+  if (snap.exists()) {
+    const data = snap.data();
+        document.getElementById("companyName").textContent =
+        snap.data().nomSociete || "Société";
+    
+        document.getElementById("projectName").textContent =
+      snap.data().nomProjet || "Projet";
+  }
+});
+onAuthStateChanged(auth, async (user) => {
+if (user) {
+
+    onSnapshot(doc(db, "users", user.uid), (snap) => {
+
+      if (snap.exists()) {
+        const data = snap.data();
+
+        appliquerPermissionsMenu(data);
+
+         // 🔥 sauvegarde locale
+    localStorage.setItem("userData", JSON.stringify(data));
+
+    afficherUser(data);
+  //     document.getElementById("preview").src =
+  // data.photo || "https://via.placeholder.com/120";
+        console.log("Auth OK");
+      }
+      });
+  } else {
+    window.location.href = "index.html";
+  }
+});
+
+function afficherUser(data) {
+ document.getElementById("userPhoto").src =
+          data.photo || "https://via.placeholder.com/40";
+
+        document.getElementById("userName").textContent =
+          data.prenom + " " + data.nom;
+}
+
+function appliquerPermissionsMenu(data) {
+
+  if (data.role === "admin") return;
+
+  if (data.permissions?.budget === "none") {
+    document.getElementById("menu-budget")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-rapport")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-financement")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-appro")?.remove();
+  }
+
+  if (data.permissions?.rapport === "none") {
+    document.getElementById("menu-balance")?.remove();
+  }
+
+     if (data.permissions?.paramettre === "none") {
+    document.getElementById("menu-paramettre")?.remove();
+     }
+}
+const tableBody = document.getElementById("tableBody");
+
+// 🔥 FORMAT
+function format(n) {
+    return Number(n || 0).toLocaleString("fr-FR") + " FCFA";
+}
+
+
+
+
+// 🔥 CHARGEMENT
+async function chargerRapport() {
+
+    tableBody.innerHTML = "";
+
+    const budgetSnap = await getDocs(collection(db, "budget"));
+    const produitsSnap = await getDocs(collection(db, "produits"));
+
+    let budgets = [];
+    let produits = [];
+
+    budgetSnap.forEach(docItem => {
+        budgets.push({ id: docItem.id, ...docItem.data() });
+    });
+
+    produitsSnap.forEach(docItem => {
+        produits.push(docItem.data());
+    });
+
+    // 🔥 calcul engagé par ligne
+    let engagementMap = {};
+
+    produits.forEach(p => {
+        if (!p.numero) return;
+
+        if (!engagementMap[p.numero]) {
+            engagementMap[p.numero] = 0;
+        }
+
+        engagementMap[p.numero] += parseFloat(p.prix) || 0;
+    });
+
+    // 🔥 TRI HIÉRARCHIQUE
+    budgets.sort((a, b) => a.numero.localeCompare(b.numero));
+
+    let totalBudget = 0;
+    let totalEngage = 0;
+    let totalReste = 0;
+    let totalProbable = 0;
+
+    budgets.forEach(b => {
+
+        const engage = engagementMap[b.numero] || 0;
+        const budget = b.montant || 0;
+        const probable = b.coutProbable || 0;
+
+        const reste = budget - engage;
+        const ecart = probable - budget;
+
+        totalBudget += budget;
+        totalEngage += engage;
+        totalReste += reste;
+        totalProbable += probable;
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${b.numero}</td>
+            <td>${b.libelle}</td>
+            <td>${format(budget)}</td>
+            <td>
+    <span style=" cursor:pointer; ;"
+    onclick="voirDetails('${b.numero}')">
+        ${format(engage)}
+    </span>
+</td>
+            <td>${format(reste)}</td>
+
+            <td>
+                <input type="number" value="${probable}"
+                onchange="updateProbable('${b.id}', this.value)">
+            </td>
+
+            <td class="${ecart > 0 ? 'negative' : 'positive'}">
+                ${format(ecart)}
+            </td>
+        `;
+
+        tableBody.appendChild(tr);
+    });
+
+    document.getElementById("totalBudget").textContent = format(totalBudget);
+    document.getElementById("totalEngage").textContent = format(totalEngage);
+    document.getElementById("totalReste").textContent = format(totalReste);
+    document.getElementById("totalProbable").textContent = format(totalProbable);
+    document.getElementById("totalEcart").textContent = format(totalProbable - totalBudget);
+}
+
+// 🔥 UPDATE COUT PROBABLE
+window.updateProbable = async (id, value) => {
+
+    const montant = parseFloat(value) || 0;
+
+    await updateDoc(doc(db, "budget", id), {
+        coutProbable: montant
+    });
+
+    chargerRapport(); // refresh
+};
+
+
+// INIT
+chargerRapport();
+const links = document.querySelectorAll("nav a");
+
+// récupérer le nom de la page actuelle
+const currentPage = window.location.pathname.split("/").pop();
+
+links.forEach(link => {
+    const linkPage = link.getAttribute("href");
+
+    if (linkPage === currentPage) {
+        link.style.color = "#ffd700"; // optionnel (couleur)
+    }
+});
+
+window.voirDetails = async (numero) => {
+
+    const detailBody = document.getElementById("detailBody");
+    detailBody.innerHTML = "";
+
+    const snapshot = await getDocs(collection(db, "produits"));
+
+    let total = 0;
+
+    snapshot.forEach(docItem => {
+
+        const data = docItem.data();
+
+        if (data.numero === numero) {
+
+            total += parseFloat(data.prix) || 0;
+
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${data.nom}</td>
+                <td>${Number(data.prix).toLocaleString("fr-FR")} FCFA</td>
+                <td>${data.desc}</td>
+                <td>
+                    ${data.image 
+                        ? '<span title="Fichier joint">📎</span>' 
+                        : '-'
+                    }
+                </td>
+            `;
+
+            detailBody.appendChild(tr);
+            document.getElementById("totalDetail").textContent = total.toLocaleString("fr-FR") + " FCFA";
+            document.getElementById("numeroligne").textContent = numero;
+        }
+    });
+
+    // afficher modal
+    document.getElementById("modal").style.display = "flex";
+};
+
+window.fermerModal = () => {
+    document.getElementById("modal").style.display = "none";
+};
+
+const modal = document.querySelector(".modal-box");
+const header = document.getElementById("modalHeader");
+
+let isDragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+header.addEventListener("mousedown", (e) => {
+    isDragging = true;
+
+    const rect = modal.getBoundingClientRect();
+
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    modal.style.position = "absolute"; // 🔥 permet déplacement
+});
+
+document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    modal.style.left = (e.clientX - offsetX) + "px";
+    modal.style.top = (e.clientY - offsetY) + "px";
+});
+
+document.addEventListener("mouseup", () => {
+    isDragging = false;
+});
+
+
+</script>
+
+<!-- 🔥 MODAL FLOTTANT -->
+<div id="modal" class="modal-overlay">
+
+  <div class="modal-box">
+
+    <div class="modal-header" id="modalHeader">
+      <h3>Détails des dépenses</h3>
+      <span class="close-btn" onclick="fermerModal()">✖</span>
+    </div>
+
+    <div class="modal-content">
+        <div >
+           <span>N° ligne:</span> 
+           <span id="numeroligne"></span>
+        </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Fournisseur</th>
+            <th>Prix</th>
+            <th>Description</th>
+            <th>Fichier</th>
+          </tr>
+        </thead>
+        <tbody id="detailBody"></tbody>
+        <tfoot>
+        <tr>
+            <td style="font-size: large"><strong>Total</strong></td>
+            <td id="totalDetail" style="font-size: large; font-weight: bold;"></td>
+            
+        </tr>
+      </tfoot>
+      </table>
+
+      <p id="totalDetail"></p>
+
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>
+
