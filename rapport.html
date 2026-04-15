@@ -286,18 +286,19 @@ button {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, addDoc, collection, getDocs, getDoc,
-    deleteDoc, doc, query, where, onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    deleteDoc, doc, query, where, onSnapshot, updateDoc} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } 
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // CONFIG FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+          apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
   messagingSenderId: "357508008682",
   appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -395,7 +396,12 @@ function format(n) {
     return Number(n || 0).toLocaleString("fr-FR") + " FCFA";
 }
 
-
+function trierHierarchique(a, b) {
+    return a.numero.localeCompare(b.numero, undefined, {
+        numeric: true,
+        sensitivity: "base"
+    });
+}
 
 
 // 🔥 CHARGEMENT
@@ -417,7 +423,7 @@ async function chargerRapport() {
         produits.push(docItem.data());
     });
 
-    // 🔥 calcul engagé par ligne
+    // 🔥 MAP ENGAGEMENT
     let engagementMap = {};
 
     produits.forEach(p => {
@@ -430,72 +436,166 @@ async function chargerRapport() {
         engagementMap[p.numero] += parseFloat(p.prix) || 0;
     });
 
-    // 🔥 TRI HIÉRARCHIQUE
-    budgets.sort((a, b) => a.numero.localeCompare(b.numero));
+    // 🔥 TRI
+    budgets.sort(trierHierarchique);
 
+    let groupes = {};
+    let parentsInfo = {};
+
+    // 🔥 GROUPES
+    budgets.forEach(item => {
+
+        if (!item.numero) return;
+
+        const parent = item.numero.substring(0, 2);
+
+        if (item.numero === parent) {
+            parentsInfo[parent] = item;
+        }
+
+        if (!groupes[parent]) {
+            groupes[parent] = [];
+        }
+
+        if (item.numero !== parent) {
+            groupes[parent].push(item);
+        }
+    });
+
+    // 🔥 TOTAUX GÉNÉRAUX (basés sur sous-totaux uniquement)
     let totalBudget = 0;
     let totalEngage = 0;
     let totalReste = 0;
     let totalProbable = 0;
 
-    budgets.forEach(b => {
+    // 🔥 AFFICHAGE
+    Object.keys(groupes).forEach(parent => {
 
-        const engage = engagementMap[b.numero] || 0;
-        const budget = b.montant || 0;
-        const probable = b.coutProbable || 0;
+        let sousBudget = 0;
+        let sousEngage = 0;
+        let sousProbable = 0;
 
-        const reste = budget - engage;
-        const ecart = probable - budget;
+        // 🔥 CALCUL ENFANTS
+        groupes[parent].forEach(item => {
 
-        totalBudget += budget;
-        totalEngage += engage;
-        totalReste += reste;
-        totalProbable += probable;
+            const budget = item.montant || 0;
+            const engage = engagementMap[item.numero] || 0;
+            const probable = item.coutProbable || item.montant;
 
-        const tr = document.createElement("tr");
+            sousBudget += budget;
+            sousEngage += engage;
+            sousProbable += probable;
+        });
 
-        tr.innerHTML = `
-            <td>${b.numero}</td>
-            <td>${b.libelle}</td>
-            <td>${format(budget)}</td>
-            <td>
-    <span style=" cursor:pointer; ;"
-    onclick="voirDetails('${b.numero}')">
-        ${format(engage)}
-    </span>
-</td>
-            <td>${format(reste)}</td>
+        const sousReste = sousBudget - sousEngage;
+        const sousEcart = sousProbable - sousBudget;
 
-            <td>
-                <input type="number" value="${probable}"
-                onchange="updateProbable('${b.id}', this.value)">
-            </td>
+        const libelleParent = parentsInfo[parent]?.libelle || "Catégorie";
 
-            <td class="${ecart > 0 ? 'negative' : 'positive'}">
-                ${format(ecart)}
+        // 🔥 LIGNE PARENT (SOUS-TOTAL)
+        const trParent = document.createElement("tr");
+        trParent.style.background = "#ddd";
+        trParent.style.fontWeight = "bold";
+
+        trParent.innerHTML = `
+            <td>${parent}</td>
+            <td>${libelleParent}</td>
+            <td>${format(sousBudget)}</td>
+            <td>${format(sousEngage)}</td>
+            <td>${format(sousReste)}</td>
+            <td>${format(sousProbable)}</td>
+            <td class="${sousEcart > 0 ? 'negative' : 'positive'}">
+                ${format(sousEcart)}
             </td>
         `;
 
-        tableBody.appendChild(tr);
+        tableBody.appendChild(trParent);
+
+        // 🔥 AJOUT AUX TOTAUX GÉNÉRAUX (ICI SEULEMENT ✅)
+        totalBudget += sousBudget;
+        totalEngage += sousEngage;
+        totalReste += sousReste;
+        totalProbable += sousProbable;
+
+        // 🔥 LIGNES ENFANTS
+        groupes[parent].forEach(item => {
+
+            const budget = item.montant || 0;
+            const engage = engagementMap[item.numero] || 0;
+            const probable = item.coutProbable || item.montant;
+
+            const reste = budget - engage;
+            const ecart = probable - budget;
+
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${item.numero}</td>
+                <td class="indent-2">${item.libelle}</td>
+                <td>${format(budget)}</td>
+                <td>
+                    <span style="cursor:pointer; color:#1d5288;"
+                        onclick="voirDetails('${item.numero}')">
+                        ${format(engage)}
+                    </span>
+                </td>
+                <td>${format(reste)}</td>
+                <td>
+                    <span style="cursor:pointer; color:#1d5288;"
+                        onclick="updateProbable('${item.id}', ${probable})">
+                        ${format(probable)}
+                    </span>
+                </td>
+            
+                <td class="${ecart > 0 ? 'negative' : 'positive'}">
+                    ${format(ecart)}
+                </td>
+            `;
+
+            tableBody.appendChild(tr);
+        });
     });
 
+    // 🔥 TOTAL FINAL
     document.getElementById("totalBudget").textContent = format(totalBudget);
     document.getElementById("totalEngage").textContent = format(totalEngage);
     document.getElementById("totalReste").textContent = format(totalReste);
     document.getElementById("totalProbable").textContent = format(totalProbable);
-    document.getElementById("totalEcart").textContent = format(totalProbable - totalBudget);
+    document.getElementById("totalEcart").textContent =
+        format(totalProbable - totalBudget);
 }
 
 // 🔥 UPDATE COUT PROBABLE
-window.updateProbable = async (id, value) => {
+// window.updateProbable = async (id, value) => {
 
-    const montant = parseFloat(value) || 0;
+//     const montant = parseFloat(value) || 0;
+
+//     await updateDoc(doc(db, "budget", id), {
+//         coutProbable: montant
+//     });
+
+//     chargerRapport(); // refresh
+// };
+
+
+window.updateProbable = async (id, ancien) => {
+
+    const nouveau = prompt("Nouveau coût probable :", ancien);
+
+    if (nouveau === null) return; // annulation
+
+    const valeur = parseFloat(nouveau);
+
+    if (isNaN(valeur)) {
+        alert("Valeur invalide");
+        return;
+    }
 
     await updateDoc(doc(db, "budget", id), {
-        coutProbable: montant
+        coutProbable: valeur
     });
 
-    chargerRapport(); // refresh
+    chargerRapport(); // 🔥 refresh
 };
 
 

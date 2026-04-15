@@ -370,7 +370,7 @@ boutton{
 
 <tfoot>
 <tr style="background-color: #eee;">
-    <td colspan="2"><strong>Total</strong></td>
+    <td colspan="2" style="font-size: large;"><strong>TOTAL</strong></td>
     <td id="total" style="font-size: large; font-weight: bold;">0</td>
     <td style="width:200px;"></td>
 </tr>
@@ -435,14 +435,10 @@ form.addEventListener("submit", async (e) => {
 
 // 🔥 TRI
 function trierHierarchique(a, b) {
-    const na = a.numero.split("").map(Number);
-    const nb = b.numero.split("").map(Number);
-
-    for (let i = 0; i < Math.max(na.length, nb.length); i++) {
-        const diff = (na[i] || 0) - (nb[i] || 0);
-        if (diff !== 0) return diff;
-    }
-    return 0;
+    return a.numero.localeCompare(b.numero, undefined, {
+        numeric: true,
+        sensitivity: "base"
+    });
 }
 
 // 🔥 NIVEAU
