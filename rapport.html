@@ -199,6 +199,10 @@ button {
 #totalEngage,#totalReste, #totalProbable, #totalEcart{
     font-weight: bold;
 }
+
+tbody tr:hover {
+    background-color: #c2c6c8; /* effet au survol */
+}
 </style>
 </head>
 
@@ -620,10 +624,13 @@ window.voirDetails = async (numero) => {
     detailBody.innerHTML = "";
 
     const snapshot = await getDocs(collection(db, "produits"));
+    const fich=await getDocs(collection(db, "fichiers"));
 
     let total = 0;
 
     snapshot.forEach(docItem => {
+
+        const fichier = fich.docs.find(f => f.data().produitId === docItem.id);
 
         const data = docItem.data();
 
@@ -638,7 +645,7 @@ window.voirDetails = async (numero) => {
                 <td>${Number(data.prix).toLocaleString("fr-FR")} FCFA</td>
                 <td>${data.desc}</td>
                 <td>
-                    ${data.image 
+                    ${fichier
                         ? '<span title="Fichier joint">📎</span>' 
                         : '-'
                     }

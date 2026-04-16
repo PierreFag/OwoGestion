@@ -388,13 +388,13 @@ import { getAuth, onAuthStateChanged, signOut }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-      apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+
+          apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
   messagingSenderId: "357508008682",
   appId: "1:357508008682:web:8dfc70a52c876d0552e593"
-
 };
 
 const app = initializeApp(firebaseConfig);
@@ -433,12 +433,17 @@ form.addEventListener("submit", async (e) => {
     afficherBudget();
 });
 
+
 // 🔥 TRI
 function trierHierarchique(a, b) {
-    return a.numero.localeCompare(b.numero, undefined, {
-        numeric: true,
-        sensitivity: "base"
-    });
+    const na = a.numero.split("").map(Number);
+    const nb = b.numero.split("").map(Number);
+
+    for (let i = 0; i < Math.max(na.length, nb.length); i++) {
+        const diff = (na[i] || 0) - (nb[i] || 0);
+        if (diff !== 0) return diff;
+    }
+    return 0;
 }
 
 // 🔥 NIVEAU
@@ -449,9 +454,10 @@ function getLevel(numero) {
 // 🔥 AFFICHAGE
 async function afficherBudget() {
 
+    onSnapshot(collection(db, "budget"), (snapshot) => {
+
     tableBody.innerHTML = "";
 
-    const snapshot = await getDocs(collection(db, "budget"));
 
     let data = [];
 
@@ -547,6 +553,7 @@ async function afficherBudget() {
 
     document.getElementById("total").textContent =
         totalGeneral.toLocaleString() + " FCFA";
+});
 }
 
 window.modifierCategorie = async (numero, ancienLibelle) => {
@@ -581,7 +588,6 @@ window.modifierCategorie = async (numero, ancienLibelle) => {
     }
 
     // 🔥 recharge
-    await afficherBudget();
 };
 
 // 🔥 SUPPRIMER
@@ -644,18 +650,7 @@ window.modifier = async (id, numero, libelle, montant) => {
 
 afficherBudget();
 
-const links = document.querySelectorAll("nav a");
 
-// récupérer le nom de la page actuelle
-const currentPage = window.location.pathname.split("/").pop();
-
-links.forEach(link => {
-    const linkPage = link.getAttribute("href");
-
-    if (linkPage === currentPage) {
-        link.style.color = "#ffd700"; // optionnel (couleur)
-    }
-});
 
 function afficherUser(data) {
  document.getElementById("userPhoto").src =
@@ -681,6 +676,19 @@ window.logout = () => {
     window.location.href = "index.html";
   });
 };
+
+const links = document.querySelectorAll("nav a");
+
+// récupérer le nom de la page actuelle
+const currentPage = window.location.pathname.split("/").pop();
+
+links.forEach(link => {
+    const linkPage = link.getAttribute("href");
+
+    if (linkPage === currentPage) {
+        link.style.color = "#ffd700"; // optionnel (couleur)
+    }
+});
 
 onAuthStateChanged(auth, async (user) => {
 if (user) {
