@@ -908,18 +908,19 @@ window.modifierProduit = async () => {
             return;
         }
 
-        snapshot.forEach(async (docItem) => {
+        const docItem = snapshot.docs[0];
 
-            let updateData = {};
+        let updateData = {};
 
-            if (nom) updateData.nom = nom;
-            if (type) updateData.type = type;
-            if (prix) updateData.prix = prix;
-            if (desc) updateData.desc = desc;
-            if (numero) updateData.numero = numero;
-            // 🔥 AJOUT / REMPLACEMENT IMAGE SI FOURNIE
-            if (files.length>0) {
-                for(let file of files){
+        if (nom) updateData.nom = nom;
+        if (type) updateData.type = type;
+        if (prix) updateData.prix = prix;
+        if (desc) updateData.desc = desc;
+        if (numero) updateData.numero = numero;
+
+        // 🔥 UPLOAD fichiers
+        if (files.length > 0) {
+            for (let file of files) {
 
                 const formData = new FormData();
                 formData.append("file", file);
@@ -934,35 +935,48 @@ window.modifierProduit = async () => {
                 const data = await res.json();
 
                 if (data.secure_url) {
-            await addDoc(collection(db, "fichiers"), {
-                produitId: docItem.id, // 🔥 Firestore ID
-                url: data.secure_url,
-                filename: file.name,
-                type: file.type,
-                createdAt: serverTimestamp()
-                });
+                    await addDoc(collection(db, "fichiers"), {
+                        produitId: docItem.id,
+                        url: data.secure_url,
+                        filename: file.name,
+                        type: file.type,
+                        createdAt: serverTimestamp()
+                    });
                 }
             }
         }
-            updateData.updatedBy = user ? user.uid : null;
-            updateData.updatedAt = new Date();
-            await updateDoc(doc(db, "produits", docItem.id), updateData);
-            await chargerFichiers();
+
+        updateData.updatedBy = user ? user.uid : null;
+        updateData.updatedAt = serverTimestamp();
+
+        await updateDoc(doc(db, "produits", docItem.id), updateData);
+
+        // 🔥 RELOAD
+        await chargerFichiers();
         afficherProduits();
 
-        });
-
-        alert("Produit modifié !");
-        // 🔥 recharge les fichiers de Firestore
-        
-          form.reset();
-    customIdInput.style.display = "none";
+        // ✅🔥 RESET PROPRE (IMPORTANT)
+        resetFormulaireModification();
 
     } catch (err) {
         console.error(err);
         alert("Erreur modification");
     }
 };
+
+function resetFormulaireModification() {
+
+    document.getElementById("editId").value = "";
+    document.getElementById("editNom").value = "";
+    document.getElementById("typePaiement").value = "";
+    document.getElementById("editPrix").value = "";
+    document.getElementById("editDesc").value = "";
+    document.getElementById("numero1").value = "";
+    
+    // 🔥 IMPORTANT pour input file
+    document.getElementById("editImage").value = "";
+
+}
 //charger les lignes
 async function chargerLignesBudget() {
 
@@ -1009,72 +1023,93 @@ async function chargerLignesBudget() {
 }
 
 async function chargerLignerBudget() {
+    
     const select = document.getElementById("numero");
-    select.innerHTML = '<option value="">--Ligne de budget--</option>';
+
     onSnapshot(collection(db, "budget"), (snapshot) => {
+
+        select.innerHTML = '<option value="">--Ligne de budget--</option>';
+
         let lignes = [];
 
-    snapshot.forEach(docItem => {
-        lignes.push(docItem.data());
+        snapshot.forEach(docItem => {
+
+            const data = docItem.data();
+
+            if (!data.numero) return;
+
+            // 🔥 garder uniquement les enfants
+            if (data.numero.length > 2) {
+                lignes.push(data);
+            }
+        });
+
+        // 🔥 tri hiérarchique
+        lignes.sort((a, b) =>
+            a.numero.localeCompare(b.numero, undefined, {
+                numeric: true,
+                sensitivity: "base"
+            })
+        );
+
+        lignes.forEach(ligne => {
+
+            const option = document.createElement("option");
+
+            let indent = "&nbsp;&nbsp;&nbsp;".repeat(ligne.numero.length - 2);
+
+            option.value = ligne.numero;
+            option.innerHTML = indent + ligne.numero + " - " + ligne.libelle;
+
+            select.appendChild(option);
+        });
     });
-
-    // 🔥 tri hiérarchique
-    lignes.sort((a, b) => a.numero.localeCompare(b.numero));
-
-    lignes.forEach(ligne => {
-
-        const option = document.createElement("option");
-
-        // 🔥 indentation visuelle
-        let indent = "";
-        if (ligne.numero.length > 1) {
-            indent = "&nbsp;&nbsp;&nbsp;".repeat(ligne.numero.length - 1);
-        }
-
-        option.value = ligne.numero;
-
-        option.innerHTML = indent + ligne.numero + " - " + ligne.libelle;
-
-        select.appendChild(option);
-    });
-});
 }
+
+let unsubscribeProduits = null; // 🔥 pour stocker le listener
 
 async function chargerProduitsSelect() {
 
     const deleteSelect = document.getElementById("deleteId");
     const editSelect = document.getElementById("editId");
 
-    deleteSelect.innerHTML = '<option value="">-- Choisir un produit --</option>';
-    editSelect.innerHTML = '<option value="">-- Choisir un produit --</option>';
+    // 🔥 stopper ancien listener
+    if (unsubscribeProduits) {
+        unsubscribeProduits();
+    }
 
-    onSnapshot(collection(db, "produits"), (snapshot) => {
+    unsubscribeProduits = onSnapshot(collection(db, "produits"), (snapshot) => {
+
+        deleteSelect.innerHTML = '<option value="">-- Choisir un produit --</option>';
+        editSelect.innerHTML = '<option value="">-- Choisir un produit --</option>';
+
         let produits = [];
 
-    snapshot.forEach(docItem => {
-        produits.push(docItem.data());
+        snapshot.forEach(docItem => {
+            produits.push({
+                id: docItem.id,
+                ...docItem.data()
+            });
+        });
+
+        // 🔥 tri
+        produits.sort((a, b) => (a.id || 0) - (b.id || 0));
+
+        produits.forEach(p => {
+
+            const label = `${p.id} - ${p.nom} (${p.prix} FCFA)`;
+
+            const opt1 = document.createElement("option");
+            opt1.value = p.id;
+            opt1.textContent = label;
+            deleteSelect.appendChild(opt1);
+
+            const opt2 = document.createElement("option");
+            opt2.value = p.id;
+            opt2.textContent = label;
+            editSelect.appendChild(opt2);
+        });
     });
-
-    // 🔥 tri par ID
-    produits.sort((a, b) => a.id - b.id);
-
-    produits.forEach(p => {
-
-        const label = `${p.id} - ${p.nom} (${p.prix} FCFA)`;
-
-        // 🔴 supprimer
-        const opt1 = document.createElement("option");
-        opt1.value = p.id;
-        opt1.textContent = label;
-        deleteSelect.appendChild(opt1);
-
-        // ✏️ modifier
-        const opt2 = document.createElement("option");
-        opt2.value = p.id;
-        opt2.textContent = label;
-        editSelect.appendChild(opt2);
-    });
-});
 }
 onSnapshot(doc(db, "parametres", "config"), (snap) => {
   if (snap.exists()) {
