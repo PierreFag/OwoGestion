@@ -217,7 +217,7 @@ tbody tr:hover {
             <div ><h2>💼 OwoGestion</h2></div>
             <div class="societe-ligne">
         <span style="font-weight:bold;">Société:</span>
-        <span id="companyName">HIRISPRODUCTION ET EDITION</span>
+        <span id="companyName"></span>
         </div>
                 </div>
             <nav>
@@ -241,7 +241,7 @@ tbody tr:hover {
     
     <div class="projet-ligne">
         <span style="font-weight:bold;">Projet :</span>
-        <span id="projectName">TASSI HANGBE</span>
+        <span id="projectName"></span>
     </div>
 
     <div id="userBox">
@@ -323,35 +323,52 @@ window.logout = () => {
     window.location.href = "index.html";
   });
 };
-onSnapshot(doc(db, "parametres", "config"), (snap) => {
-  if (snap.exists()) {
-    const data = snap.data();
-        document.getElementById("companyName").textContent =
-        snap.data().nomSociete || "Société";
-    
-        document.getElementById("projectName").textContent =
-      snap.data().nomProjet || "Projet";
-  }
-});
+
+const localConfig = localStorage.getItem("configData");
+
+if (localConfig) {
+    afficherConfig(JSON.parse(localConfig));
+}
+
+function afficherConfig(data) {
+    document.getElementById("companyName").textContent =
+        data.nomSociete || "Société";
+
+    document.getElementById("projectName").textContent =
+        data.nomProjet || "Projet";
+}
+
 onAuthStateChanged(auth, async (user) => {
 if (user) {
 
+    
     onSnapshot(doc(db, "users", user.uid), (snap) => {
 
       if (snap.exists()) {
         const data = snap.data();
 
         appliquerPermissionsMenu(data);
-
-         // 🔥 sauvegarde locale
-    localStorage.setItem("userData", JSON.stringify(data));
-
-    afficherUser(data);
+        localStorage.setItem("userData", JSON.stringify(data));
+        afficherUser(data);
+      
   //     document.getElementById("preview").src =
   // data.photo || "https://via.placeholder.com/120";
         console.log("Auth OK");
       }
       });
+
+
+    // 🔥 PARAMETRES (UNE SEULE FOIS)
+    onSnapshot(doc(db, "parametres", "config"), (configSnap) => {
+        if (configSnap.exists()) {
+            const configData = configSnap.data();
+
+        // 🔥 STOCKAGE LOCAL
+        localStorage.setItem("configData", JSON.stringify(configData));
+
+            afficherConfig(configData);
+        }
+    });
   } else {
     window.location.href = "index.html";
   }
@@ -406,15 +423,40 @@ function trierHierarchique(a, b) {
         sensitivity: "base"
     });
 }
+async function getProduits() {
 
+    const localData = localStorage.getItem("produits");
+
+    // ✅ 1. si déjà en local → utiliser
+    if (localData) {
+        console.log("📦 Chargé depuis localStorage");
+        return JSON.parse(localData);
+    }
+
+    // 🔥 2. sinon → Firestore
+    console.log("🌐 Chargé depuis Firestore");
+
+    const snapshot = await getDocs(collection(db, "produits"));
+
+    let produits = [];
+
+    snapshot.forEach(docItem => {
+        produits.push(docItem.data());
+    });
+
+    // 🔥 3. sauvegarde locale
+    localStorage.setItem("produits", JSON.stringify(produits));
+
+    return produits;
+}
 
 // 🔥 CHARGEMENT
 async function chargerRapport() {
 
     tableBody.innerHTML = "";
 
-    const budgetSnap = await getDocs(collection(db, "budget"));
-    const produitsSnap = await getDocs(collection(db, "produits"));
+    onSnapshot(collection(db, "budget"), async (budgetSnap) => {
+      const produitsSnap = await getProduits();
 
     let budgets = [];
     let produits = [];
@@ -567,6 +609,7 @@ async function chargerRapport() {
     document.getElementById("totalProbable").textContent = format(totalProbable);
     document.getElementById("totalEcart").textContent =
         format(totalProbable - totalBudget);
+});
 }
 
 // 🔥 UPDATE COUT PROBABLE
@@ -598,13 +641,13 @@ window.updateProbable = async (id, ancien) => {
     await updateDoc(doc(db, "budget", id), {
         coutProbable: valeur
     });
-
-    chargerRapport(); // 🔥 refresh
+ // 🔥 refresh
+ await chargerRapport();
 };
 
 
 // INIT
-chargerRapport();
+
 const links = document.querySelectorAll("nav a");
 
 // récupérer le nom de la page actuelle
@@ -695,7 +738,7 @@ document.addEventListener("mouseup", () => {
     isDragging = false;
 });
 
-
+await chargerRapport();
 </script>
 
 <!-- 🔥 MODAL FLOTTANT -->

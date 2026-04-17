@@ -177,7 +177,7 @@ button:hover {
             <div ><h2>💼 OwoGestion</h2></div>
             <div class="societe-ligne">
         <span style="font-weight:bold;">Société:</span>
-        <span id="companyName">HIRISPRODUCTION ET EDITION</span>
+        <span id="companyName"></span>
         </div>
                 </div>
             <nav>
@@ -200,7 +200,7 @@ button:hover {
 
     <div class="projet-ligne">
         <span style="font-weight:bold;">Projet :</span>
-        <span id="projectName">TASSI HANGBE</span>
+        <span id="projectName"></span>
     </div>
 
     <div id="userBox">
@@ -265,16 +265,19 @@ if (localUser) {
   afficherUser(data);
 }
 
-onSnapshot(doc(db, "parametres", "config"), (snap) => {
-  if (snap.exists()) {
-    const data = snap.data();
+const localConfig = localStorage.getItem("configData");
+
+if (localConfig) {
+    afficherConfig(JSON.parse(localConfig));
+}
+
+function afficherConfig(data) {
     document.getElementById("companyName").textContent =
-      data.nomSociete || "Société";
+        data.nomSociete || "Société";
+
     document.getElementById("projectName").textContent =
-      data.nomProjet || "Projet";
-  }
-        
-});
+        data.nomProjet || "Projet";
+}
 
 function afficherUser(data) {
  document.getElementById("userPhoto").src =
@@ -295,20 +298,29 @@ window.logout = () => {
 onAuthStateChanged(auth, async (user) => {
 if (user) {
 
+      // 🔥 USER
     onSnapshot(doc(db, "users", user.uid), (snap) => {
+        if (snap.exists()) {
+            const data = snap.data();
 
-      if (snap.exists()) {
-        const data = snap.data();
+            appliquerPermissionsMenu(data);
 
-        appliquerPermissionsMenu(data);
-            // 🔥 sauvegarde local
-            localStorage.setItem("userData", JSON.stringify(data)); 
+            localStorage.setItem("userData", JSON.stringify(data));
             afficherUser(data);
-  //     document.getElementById("preview").src =
-  // data.photo || "https://via.placeholder.com/120";
-        console.log("Auth OK");
-      }
-      });
+        }
+    });
+
+    // 🔥 PARAMETRES (UNE SEULE FOIS)
+    onSnapshot(doc(db, "parametres", "config"), (configSnap) => {
+        if (configSnap.exists()) {
+            const configData = configSnap.data();
+
+        // 🔥 STOCKAGE LOCAL
+        localStorage.setItem("configData", JSON.stringify(configData));
+
+            afficherConfig(configData);
+        }
+    });
   } else {
     window.location.href = "index.html";
   }

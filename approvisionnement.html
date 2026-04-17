@@ -135,7 +135,7 @@ nav a:hover {
             <div ><h2>💼 OwoGestion</h2></div>
             <div class="societe-ligne">
         <span style="font-weight:bold;">Société:</span>
-        <span id="companyName">HIRISPRODUCTION ET EDITION</span>
+        <span id="companyName"></span>
         </div>
                 </div>
             <nav>
@@ -159,7 +159,7 @@ nav a:hover {
     
     <div class="projet-ligne">
         <span style="font-weight:bold;">Projet :</span>
-        <span id="projectName">TASSI HANGBE</span>
+        <span id="projectName"></span>
     </div>
 
     <div id="userBox">
@@ -379,19 +379,25 @@ links.forEach(link => {
         link.style.color = "#ffd700"; // optionnel (couleur)
     }
 });
-onSnapshot(doc(db, "parametres", "config"), (snap) => {
-  if (snap.exists()) {
-    const data = snap.data();
-        document.getElementById("companyName").textContent =
-        snap.data().nomSociete || "Société";
-    
-        document.getElementById("projectName").textContent =
-      snap.data().nomProjet || "Projet";
-  }
-});
+
+const localConfig = localStorage.getItem("configData");
+
+if (localConfig) {
+    afficherConfig(JSON.parse(localConfig));
+}
+
+function afficherConfig(data) {
+    document.getElementById("companyName").textContent =
+        data.nomSociete || "Société";
+
+    document.getElementById("projectName").textContent =
+        data.nomProjet || "Projet";
+}
+
 onAuthStateChanged(auth, async (user) => {
 if (user) {
 
+   
     onSnapshot(doc(db, "users", user.uid), (snap) => {
 
       if (snap.exists()) {
@@ -406,6 +412,19 @@ if (user) {
         console.log("Auth OK");
       }
       });
+
+
+    // 🔥 PARAMETRES (UNE SEULE FOIS)
+    onSnapshot(doc(db, "parametres", "config"), (configSnap) => {
+        if (configSnap.exists()) {
+            const configData = configSnap.data();
+
+        // 🔥 STOCKAGE LOCAL
+        localStorage.setItem("configData", JSON.stringify(configData));
+
+            afficherConfig(configData);
+        }
+    });
   } else {
     window.location.href = "index.html";
   }

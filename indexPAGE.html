@@ -242,7 +242,7 @@ input[type="checkbox"]:checked {
             <div ><h2>💼 OwoGestion</h2></div>
             <div class="societe-ligne">
         <span style="font-weight:bold;">Société:</span>
-        <span id="companyName">HIRISPRODUCTION ET EDITION</span>
+        <span id="companyName"></span>
         </div>
                 </div>
               <nav>
@@ -264,7 +264,7 @@ input[type="checkbox"]:checked {
     
     <div class="projet-ligne">
         <span style="font-weight:bold;">Projet :</span>
-        <span id="projectName">TASSI HANGBE</span>
+        <span id="projectName"></span>
     </div>
 
     <div id="userBox">
@@ -496,7 +496,7 @@ input[type="checkbox"]:checked {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, addDoc, collection, getDocs, getDoc, setDoc,
-    deleteDoc, doc, query, where, onSnapshot, updateDoc, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    deleteDoc, doc, query, where, onSnapshot, updateDoc, serverTimestamp,} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signOut } 
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -528,6 +528,12 @@ if (localUser) {
   const data = JSON.parse(localUser);
 
   afficherUser(data);
+}
+
+const localConfig = localStorage.getItem("configData");
+
+if (localConfig) {
+    afficherConfig(JSON.parse(localConfig));
 }
 
 // DOM
@@ -977,92 +983,171 @@ function resetFormulaireModification() {
     document.getElementById("editImage").value = "";
 
 }
-//charger les lignes
-async function chargerLignesBudget() {
 
-    const select = document.getElementById("numero1");
 
-    onSnapshot(collection(db, "budget"), (snapshot) => {
+// function afficherlignes(data) {
 
-        select.innerHTML = '<option value="">--Ligne de budget--</option>';
+//     const select = document.getElementById("numero1");
 
-        let lignes = [];
 
-        snapshot.forEach(docItem => {
+//     const option = document.createElement("option");
 
-            const data = docItem.data();
+//     option.value = data.numero;
+//     option.textContent = data.numero + " - " + data.libelle;
 
-            if (!data.numero) return;
+//     select.appendChild(option);
 
-            // 🔥 garder uniquement les enfants
-            if (data.numero.length > 2) {
-                lignes.push(data);
-            }
-        });
+// }
+// //charger les lignes
+// async function chargerLignesBudget() {
 
-        // 🔥 tri hiérarchique
-        lignes.sort((a, b) =>
-            a.numero.localeCompare(b.numero, undefined, {
-                numeric: true,
-                sensitivity: "base"
-            })
-        );
+//     onSnapshot(collection(db, "budget"), (snapshot) => {
 
-        lignes.forEach(ligne => {
+//         select.innerHTML = '<option value="">--Ligne de budget--</option>';
 
-            const option = document.createElement("option");
+//         let lignes = [];
 
-            let indent = "&nbsp;&nbsp;&nbsp;".repeat(ligne.numero.length - 2);
+//         snapshot.forEach(docItem => {
 
-            option.value = ligne.numero;
-            option.innerHTML = indent + ligne.numero + " - " + ligne.libelle;
+//             const data = docItem.data();
 
-            select.appendChild(option);
-        });
+//             if (!data.numero) return;
+
+//             // 🔥 garder uniquement les enfants
+//             if (data.numero.length > 2) {
+//                 lignes.push(data);
+//             }
+            
+//         });
+
+//         // 🔥 tri hiérarchique
+//         lignes.sort((a, b) =>
+//             a.numero.localeCompare(b.numero, undefined, {
+//                 numeric: true,
+//                 sensitivity: "base"
+//             })
+//         );
+
+//         lignes.forEach(ligne => {
+
+//             const option = document.createElement("option");
+
+//             let indent = "&nbsp;&nbsp;&nbsp;".repeat(ligne.numero.length - 2);
+
+//             option.value = ligne.numero;
+//             option.innerHTML = indent + ligne.numero + " - " + ligne.libelle;
+
+//             select.appendChild(option);
+
+         
+//             afficherlignes(ligne);
+//         });
+
+//            localStorage.setItem("ligneData", JSON.stringify(lignes));
+//     });
+// }
+
+// async function chargerLignerBudget() {
+    
+//     const select = document.getElementById("");
+
+//     const snapshot = await getDocs(collection(db, "budget"));
+
+//         select.innerHTML = '<op';
+
+//         let lignes = [];
+
+//         snapshot.forEach(docItem => {
+
+//             const data = docItem.data();
+
+//             if (!data.numero) return;
+
+//             // 🔥 garder uniquement les enfants
+//             if (data.numero.length > 2) {
+//                 lignes.push(data);
+//             }
+//         });
+
+//         // 🔥 tri hiérarchique
+//         lignes.sort((a, b) =>
+//             a.numero.localeCompare(b.numero, undefined, {
+//                 numeric: true,
+//                 sensitivity: "base"
+//             })
+//         );
+
+//         lignes.forEach(ligne => {
+
+//             const option = document.createElement("oooo");
+
+//             let indent = "&nbsp;&nbsp;&nbsp;".repeat(ligne.numero.length - 2);
+
+//             option.value = ligne.numero;
+//             option.innerHTML = indent + ligne.numero + " - " + ligne.libelle;
+
+//         })
+// }
+
+function chargerDepuisLocal(selectId) {
+
+    const lignes = JSON.parse(localStorage.getItem("ligneData"));
+
+    if (!lignes) return;
+
+    const select = document.getElementById(selectId);
+
+    if (!select) return;
+
+    // reset
+    select.innerHTML = '<option value="">--Ligne de budget--</option>';
+
+    lignes.forEach(ligne => {
+
+        let indent = " ".repeat(ligne.numero.length - 2);
+
+        const option = document.createElement("option");
+
+        option.value = ligne.numero;
+        option.textContent = indent + ligne.numero + " - " + ligne.libelle;
+
+        select.appendChild(option);
     });
 }
 
-async function chargerLignerBudget() {
-    
-    const select = document.getElementById("numero");
+async function chargerLignesBudget() {
 
     onSnapshot(collection(db, "budget"), (snapshot) => {
 
-        select.innerHTML = '<option value="">--Ligne de budget--</option>';
+    let lignes = [];
 
-        let lignes = [];
+    snapshot.forEach(docItem => {
 
-        snapshot.forEach(docItem => {
+        const data = docItem.data();
 
-            const data = docItem.data();
+        if (!data.numero) return;
 
-            if (!data.numero) return;
+        // 🔥 uniquement enfants
+        if (data.numero.length > 2) {
+            lignes.push(data);
+        }
+    });
 
-            // 🔥 garder uniquement les enfants
-            if (data.numero.length > 2) {
-                lignes.push(data);
-            }
-        });
+    // 🔥 tri
+    lignes.sort((a, b) =>
+        a.numero.localeCompare(b.numero, undefined, {
+            numeric: true,
+            sensitivity: "base"
+        })
+    );
 
-        // 🔥 tri hiérarchique
-        lignes.sort((a, b) =>
-            a.numero.localeCompare(b.numero, undefined, {
-                numeric: true,
-                sensitivity: "base"
-            })
-        );
+    // 🔥 stockage local
+    localStorage.setItem("ligneData", JSON.stringify(lignes));
 
-        lignes.forEach(ligne => {
+    // 🔥 affichage immédiat
+    chargerDepuisLocal("numero1");
+    chargerDepuisLocal("numero"); // si tu as un 2e select
 
-            const option = document.createElement("option");
-
-            let indent = "&nbsp;&nbsp;&nbsp;".repeat(ligne.numero.length - 2);
-
-            option.value = ligne.numero;
-            option.innerHTML = indent + ligne.numero + " - " + ligne.libelle;
-
-            select.appendChild(option);
-        });
     });
 }
 
@@ -1111,50 +1196,58 @@ async function chargerProduitsSelect() {
         });
     });
 }
-onSnapshot(doc(db, "parametres", "config"), (snap) => {
-  if (snap.exists()) {
-    const data = snap.data();
-        document.getElementById("companyName").textContent =
-        snap.data().nomSociete || "Société";
-    
-        document.getElementById("projectName").textContent =
-      snap.data().nomProjet || "Projet";
-  }
-});
 
 onAuthStateChanged(auth, async (user) => {
 if (user) {
 
+    // 🔥 USER
     onSnapshot(doc(db, "users", user.uid), (snap) => {
+        if (snap.exists()) {
+            const data = snap.data();
 
-      if (snap.exists()) {
-        const data = snap.data();
+            appliquerPermissionsMenu(data);
 
-        appliquerPermissionsMenu(data);
+            localStorage.setItem("userData", JSON.stringify(data));
+            afficherUser(data);
+        }
+    });
 
-     localStorage.setItem("userData", JSON.stringify(data));
+    // 🔥 PARAMETRES (UNE SEULE FOIS)
+    onSnapshot(doc(db, "parametres", "config"), (configSnap) => {
+        if (configSnap.exists()) {
+            const configData = configSnap.data();
 
-    afficherUser(data);
-      
-  //     document.getElementById("preview").src =
-  // data.photo || "https://via.placeholder.com/120";
-        console.log("Auth OK");
-      }
-      });
-  } else {
+        // 🔥 STOCKAGE LOCAL
+        localStorage.setItem("configData", JSON.stringify(configData));
+
+            afficherConfig(configData);
+        }
+    });
+
+} else {
     window.location.href = "index.html";
-  }
+}
 });
 
 function afficherUser(data) {
     const userName = document.getElementById("userName");
     const userPhoto = document.getElementById("userPhoto");
 
+
     userName.textContent = data.prenom + " " + data.nom;
     userPhoto.src = data.photo || "https://via.placeholder.com/40";
 }
 
+function afficherConfig(data) {
+    document.getElementById("companyName").textContent =
+        data.nomSociete || "Société";
+
+    document.getElementById("projectName").textContent =
+        data.nomProjet || "Projet";
+}
+
 function appliquerPermissionsMenu(data) {
+
 
   if (data.role === "admin") return;
 
@@ -1201,8 +1294,6 @@ let fichiersMap = {};
 
 // INIT
 await chargerUsers();
-chargerLignerBudget();
-chargerLignesBudget();
 await chargerFichiers();
 afficherProduits();
 chargerProduitsSelect();
@@ -1294,6 +1385,14 @@ const inputs = document.querySelectorAll(
 inputs.forEach(input => {
     input.addEventListener("input", afficherProduits);
 });
+
+// 🔥 👉 ICI TU METS TON CODE (INIT)
+chargerDepuisLocal("numero1");
+chargerDepuisLocal("numero");
+
+if (!localStorage.getItem("ligneData")) {
+    chargerLignesBudget();
+}
 </script>
 <!-- 🔥 MODAL FLOTTANT -->
 <div id="modal" class="modal-overlay">
