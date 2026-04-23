@@ -492,6 +492,11 @@ input[type="checkbox"]:checked {
     </tfoot>
 </table>
 
+<script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"></script>
+<script>
+  UPLOADCARE_PUBLIC_KEY = "ae3015492e4d03065d7e";
+</script>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -605,8 +610,12 @@ window.ouvrirFichiers = async (produitId) => {
 
         div.innerHTML = `
             📄 ${f.filename}<br>
-            <button onclick="voirFichier('${f.url}')">Voir</button>
-            <button onclick="downloadFile('${f.url}')">Télécharger</button>
+            <button onclick="voirFichier('${f.url}')">
+            Voir
+            </button>
+            <button onclick="telechargerFichier('${f.url}', '${f.filename}')">
+            Télécharger
+            </button>
             <button onclick="supprimerFichier('${f.id}')">Supprimer</button>
             <hr>
         `;
@@ -616,6 +625,32 @@ window.ouvrirFichiers = async (produitId) => {
     console.log("Produit ID:", produitId);
 console.log("Fichiers trouvés:", fichiersMap[produitId]);
 };
+
+async function uploadToUploadcare(file) {
+    const formData = new FormData();
+    formData.append("UPLOADCARE_PUB_KEY", "ae3015492e4d03065d7e");
+    formData.append("UPLOADCARE_STORE", "1");
+    formData.append("file", file);
+
+    const res = await fetch("https://upload.uploadcare.com/base/", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+
+    if (!data.file) {
+        throw new Error("Erreur Uploadcare");
+    }
+
+    const CDN_BASE = "https://1qq9l7n6hv.ucarecd.net";
+
+        return {
+            url: `${CDN_BASE}/${data.file}/${encodeURIComponent(file.name)}`,
+            uuid: data.file
+        };
+}
+
 // 🔥 AJOUT PRODUIT
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -700,44 +735,34 @@ try {
 
     if(files.length>0){
     for (let file of files) {
+        try {
+        const result = await uploadToUploadcare(file);
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "OwoGestion_upload");
-    formData.append("folder", "JUSTIFICATIFS"); 
-
-    const res = await fetch("https://api.cloudinary.com/v1_1/dbp6jdmxz/auto/upload", {
-        method: "POST",
-        body: formData
-    });
-
-    const data = await res.json();
-
-    
-        if (data.secure_url) {
-        const fileId=await addDoc(collection(db, "fichiers"), {
+        await addDoc(collection(db, "fichiers"), {
             produitId: produitRef.id,
-            url: data.secure_url,
+            url: result.url,
             filename: file.name,
             type: file.type,
+            fileId: result.uuid,
             createdAt: serverTimestamp()
         });
+
+    } catch (err) {
+        console.error(err);
+        alert("Erreur upload fichier");
     }
-        if (!data.secure_url) {
-            alert("Erreur Cloudinary");
-            console.error(data);
-            return;
-        }
+    
     }
 }
+ 
     await chargerFichiers();
+    afficherProduits();
      
 
     // 🔥 SAUVEGARDE FIRESTORE (image optionnelle)
    
     form.reset();
     customIdInput.style.display = "none";
-    
     } catch (err) {
         console.error(err);
         alert("Erreur !");
@@ -830,6 +855,8 @@ Modifié par : ${updatedName}
     document.getElementById("totalPrix").textContent = Number(total.toFixed(2)).toLocaleString("fr-FR")+" FCFA";
     });
 }
+
+
 
 window.togglePaye = async (id, statut) => {
     try {
@@ -927,27 +954,22 @@ window.modifierProduit = async () => {
         // 🔥 UPLOAD fichiers
         if (files.length > 0) {
             for (let file of files) {
+                try {
+                        const result = await uploadToUploadcare(file);
 
-                const formData = new FormData();
-                formData.append("file", file);
-                formData.append("upload_preset", "OwoGestion_upload");
-                formData.append("folder", "JUSTIFICATIFS");
+                        await addDoc(collection(db, "fichiers"), {
+                            produitId: docItem.id,
+                            url: result.url,
+                            filename: file.name,
+                            type: file.type,
+                            fileId: result.uuid,
+                            createdAt: serverTimestamp()
+                        });
 
-                const res = await fetch("https://api.cloudinary.com/v1_1/dbp6jdmxz/auto/upload", {
-                    method: "POST",
-                    body: formData
-                });
-
-                const data = await res.json();
-
-                if (data.secure_url) {
-                    await addDoc(collection(db, "fichiers"), {
-                        produitId: docItem.id,
-                        url: data.secure_url,
-                        filename: file.name,
-                        type: file.type,
-                        createdAt: serverTimestamp()
-                    });
+                    } catch (err) {
+                        console.error(err);
+                        alert("Erreur upload fichier");
+          
                 }
             }
         }
@@ -1281,16 +1303,31 @@ function appliquerPermissionsMenu(data) {
     window.open(downloadUrl, "_blank");
 };*/
 
-window.downloadFile = (url) => {
-    const downloadUrl = url.replace("/upload/", "/upload/fl_attachment/");
-    // const a = document.createElement("a");
-    // a.href = downloadUrl;
-    // a.target = "_blank";
-    // a.click();
-    window.open(downloadUrl, "_blank");
-};
+
 let fichiersMap = {};
 
+window.telechargerFichier = async (url, filename) => {
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = filename || "fichier.pdf";
+
+        document.body.appendChild(a);
+        a.click();
+
+        a.remove();
+        window.URL.revokeObjectURL(blobUrl);
+
+    } catch (err) {
+        console.error(err);
+        alert("Erreur téléchargement");
+    }
+};
 
 // INIT
 await chargerUsers();
