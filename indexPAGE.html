@@ -305,6 +305,14 @@ input[type="checkbox"]:checked {
     </select>
 
     <input type="number" id="prix" placeholder="Prix">
+    <select id="typeCout">
+    <option value="">Type de coût</option>
+    <option value="SAL">Salaire</option>
+    <option value="CAR">Carburant</option>
+    <option value="LOC">Location</option>
+    <option value="FAC">Factures</option>
+    <option value="CAC">Cachet</option>
+</select>
 
     <textarea id="desc" placeholder="Description" class="full"></textarea>
 
@@ -353,6 +361,14 @@ input[type="checkbox"]:checked {
     </select>
 
     <input type="number" id="searchPrix" placeholder="Prix max">
+    <select id="searchTypeCout">
+    <option value="">Type de coût</option>
+    <option value="SAL">Salaire</option>
+    <option value="CAR">Carburant</option>
+    <option value="LOC">Location</option>
+    <option value="FAC">Factures</option>
+    <option value="CAC">Cachet</option>
+</select>
 
     <input type="text" id="searchDesc" placeholder="Description" class="full">
     <select id="searchPaye">
@@ -388,6 +404,14 @@ input[type="checkbox"]:checked {
 </select>
 
 <input type="number" id="editPrix" placeholder="Prix">
+<select id="editTypeCout">
+    <option value="">Type de coût</option>
+    <option value="SAL">Salaire</option>
+    <option value="CAR">Carburant</option>
+    <option value="LOC">Location</option>
+    <option value="FAC">Factures</option>
+    <option value="CAC">Cachet</option>
+</select>
 
 <textarea id="editDesc" placeholder="Description" class="full"></textarea>
 
@@ -657,6 +681,7 @@ form.addEventListener("submit", async (e) => {
 
     const nom = document.getElementById("nom").value;
     const type = document.getElementById("type").value;
+    const typeCout = document.getElementById("typeCout").value;
     const prix = parseInt(document.getElementById("prix").value);
     const desc = document.getElementById("desc").value;
     const numero = document.getElementById("numero").value;
@@ -670,29 +695,35 @@ try {
 
         // Gestion ID
     
-    let finalId;
-    if (autoSelect.value == "1") {
-        const snapshot = await getDocs(collection(db, "produits"));
-        let maxId = 0;
+    let newIdNum;
+        let idAffiche;
 
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            if (d.id && d.id > maxId) {
-                maxId = d.id;
+        if (autoSelect.value == "1") {
+            const snapshot = await getDocs(collection(db, "produits"));
+            let maxId = 0;
+
+            snapshot.forEach(doc => {
+                const d = doc.data();
+
+                if (d.typeCout === typeCout && d.idNum > maxId) {
+                    maxId = d.idNum;
+                }
+            });
+
+            newIdNum = maxId + 1;
+            idAffiche = `${typeCout}-${String(newIdNum).padStart(3, "0")}`;
+
+        } else {
+            const customId = customIdInput.value;
+
+            if (!customId) {
+                alert("Entre un ID !");
+                return;
             }
-        });
 
-        finalId = maxId + 1;
-    } else {
-        const customId = customIdInput.value;
-
-        if (!customId) {
-            alert("Entre un ID !");
-            return;
+            newIdNum = parseInt(customId);
+            idAffiche = `${typeCout}-${String(newIdNum).padStart(3, "0")}`;
         }
-
-        finalId = parseInt(customId);
-    }
     // 🔥 UPLOAD UNIQUEMENT SI FICHIER EXISTE
     // if (file) {
 
@@ -718,10 +749,12 @@ try {
     // }
 
     const produitRef=await addDoc(collection(db, "produits"), {
-        id: finalId,
+        id: idAffiche,
+        idNum: newIdNum,
         numero,
         nom,
         type,
+        typeCout,
         prix,
         desc,
         paye: false,
@@ -764,8 +797,8 @@ try {
     form.reset();
     customIdInput.style.display = "none";
     } catch (err) {
-        console.error(err);
-        alert("Erreur !");
+        console.error("ERREUR COMPLETE:", err);
+    alert(err.message);
     }
 });
 
@@ -792,6 +825,7 @@ async function afficherProduits() {
     const sPrix = document.getElementById("searchPrix").value;
     const sDesc = document.getElementById("searchDesc").value.toLowerCase();
     const sPaye = document.getElementById("searchPaye").value;
+    const sTypeCout = document.getElementById("searchTypeCout").value;
     // 🔥 FILTRAGE
     produits = produits.filter(p => {
 
@@ -801,7 +835,8 @@ async function afficherProduits() {
             (!sType || p.type === sType) &&
             (!sPrix || p.prix <= parseFloat(sPrix)) &&
             (!sDesc || (p.desc || "").toLowerCase().includes(sDesc)) &&
-            (!sPaye || String(p.paye) === sPaye)
+            (!sPaye || String(p.paye) === sPaye) &&
+            (!sTypeCout || p.typeCout === sTypeCout)
         );
 
     });
@@ -873,6 +908,7 @@ window.togglePaye = async (id, statut) => {
     }
 };
 
+
 // 🔥 SUPPRESSION PAR ID
 window.supprimerParId = async () => {
     const id = parseInt(document.getElementById("deleteId").value);
@@ -914,13 +950,16 @@ window.supprimerParId = async () => {
 // Modifier
 window.modifierProduit = async () => {
 
-    const id = parseInt(document.getElementById("editId").value);
+    const id = document.getElementById("editId").value;
     const nom = document.getElementById("editNom").value;
     const type = document.getElementById("typePaiement").value;
     const prix = document.getElementById("editPrix").value;
     const desc = document.getElementById("editDesc").value;
     const files = document.getElementById("editImage").files;
     const numero = document.getElementById("numero1").value;
+    const typeCout = document.getElementById("editTypeCout").value;
+
+
     const user = auth.currentUser;
 
     if (!id) {
@@ -950,6 +989,7 @@ window.modifierProduit = async () => {
         if (prix) updateData.prix = prix;
         if (desc) updateData.desc = desc;
         if (numero) updateData.numero = numero;
+        if (typeCout) updateData.typeCout = typeCout;   
 
         // 🔥 UPLOAD fichiers
         if (files.length > 0) {
@@ -1000,7 +1040,7 @@ function resetFormulaireModification() {
     document.getElementById("editPrix").value = "";
     document.getElementById("editDesc").value = "";
     document.getElementById("numero1").value = "";
-    
+    document.getElementById("editTypeCout").value = "";
     // 🔥 IMPORTANT pour input file
     document.getElementById("editImage").value = "";
 
@@ -1416,7 +1456,7 @@ document.addEventListener("click", async (e) => {
 });
 
 const inputs = document.querySelectorAll(
-    "#searchNumero, #searchNom, #searchType, #searchPrix, #searchDesc, #searchPaye"
+    "#searchNumero, #searchNom, #searchType, #searchPrix, #searchDesc, #searchPaye, #searchTypeCout"
 );
 
 inputs.forEach(input => {
