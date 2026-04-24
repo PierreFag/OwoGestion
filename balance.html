@@ -168,6 +168,11 @@ button {
 </div>
 
 <div class="card">
+    <h3>📱 Mobile Money</h3>
+    <p id="mobile">0 FCFA</p>
+</div>
+
+<div class="card">
     <h3>💳 Virement</h3>
     <p id="virement">0 FCFA</p>
 </div>
@@ -188,12 +193,13 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+      apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
   messagingSenderId: "357508008682",
   appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+
 };
 
 const app = initializeApp(firebaseConfig);
@@ -223,11 +229,12 @@ async function chargerBalance() {
     let espece = 0;
     let cheque = 0;
     let virement = 0;
+    let mobile = 0;
 
     // 🔹 Financements
     const finSnap = await getDocs(collection(db, "financements"));
     finSnap.forEach(doc => {
-        totalFinancement += doc.data().montant || 0;
+        totalFinancement += parseFloat(doc.data().montant) || 0;
     });
 
     // 🔹 Dépenses (caisse)
@@ -238,12 +245,13 @@ async function chargerBalance() {
         const data = doc.data();
         if(data.paye ===true){
 
-        totalDepense += data.prix|| 0;
+        totalDepense += parseFloat(data.prix)|| 0;
 
         // ⚠️ suppose que tu as un champ "mode"
-        if (data.type === "Espèce") espece += data.prix || 0;
-        if (data.type === "Chèque") cheque += data.prix || 0;
-        if (data.type === "Virement") virement += data.prix || 0;
+        if (data.type === "Espèce") espece += parseFloat(data.prix) || 0;
+        if (data.type === "Chèque") cheque += parseFloat(data.prix) || 0;
+        if (data.type === "Virement") virement += parseFloat(data.prix) || 0;
+        if (data.type === "Mobile Money") mobile += parseFloat(data.prix) || 0;
     
         }
     });
@@ -266,6 +274,9 @@ async function chargerBalance() {
 
     document.getElementById("virement").textContent =
         virement.toLocaleString("fr-FR") + " FCFA";
+
+    document.getElementById("mobile").textContent =
+        mobile.toLocaleString("fr-FR") + " FCFA";
 
     document.getElementById("reste").textContent =
         reste.toLocaleString("fr-FR") + " FCFA";

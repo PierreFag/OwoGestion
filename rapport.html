@@ -296,12 +296,14 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // CONFIG FIREBASE
 const firebaseConfig = {
-          apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+      apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
   messagingSenderId: "357508008682",
   appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+
+
 
 };
 const app = initializeApp(firebaseConfig);
@@ -425,23 +427,12 @@ function trierHierarchique(a, b) {
 }
 async function getProduits() {
 
-    const localData = localStorage.getItem("produits");
-
-    // ✅ 1. si déjà en local → utiliser
-    if (localData) {
-        console.log("📦 Chargé depuis localStorage");
-        return JSON.parse(localData);
-    }
-
-    // 🔥 2. sinon → Firestore
-    console.log("🌐 Chargé depuis Firestore");
-
     const snapshot = await getDocs(collection(db, "produits"));
 
     let produits = [];
 
     snapshot.forEach(docItem => {
-        produits.push(docItem.data());
+    produits.push({ id: docItem.id, ...docItem.data() });
     });
 
     // 🔥 3. sauvegarde locale
@@ -450,37 +441,40 @@ async function getProduits() {
     return produits;
 }
 
+// async function getProduits() {
+//     const snapshot = await getDocs(collection(db, "produits"));
+
+//     let produits = [];
+
+//     snapshot.forEach(docItem => {
+//         produits.push({ id: docItem.id, ...docItem.data() });
+//     });
+
+//     return produits;
+// }
+
 // 🔥 CHARGEMENT
 async function chargerRapport() {
 
-    tableBody.innerHTML = "";
-
-    onSnapshot(collection(db, "budget"), async (budgetSnap) => {
-      const produitsSnap = await getProduits();
 
     let budgets = [];
     let produits = [];
 
-    budgetSnap.forEach(docItem => {
-        budgets.push({ id: docItem.id, ...docItem.data() });
-    });
+    function render() {
 
-    produitsSnap.forEach(docItem => {
-        produits.push(docItem.data());
-    });
+        tableBody.innerHTML = "";
 
-    // 🔥 MAP ENGAGEMENT
-    let engagementMap = {};
+        let engagementMap = {};
 
-    produits.forEach(p => {
-        if (!p.numero) return;
+        produits.forEach(p => {
+            if (!p.numero) return;
 
-        if (!engagementMap[p.numero]) {
-            engagementMap[p.numero] = 0;
-        }
+            if (!engagementMap[p.numero]) {
+                engagementMap[p.numero] = 0;
+            }
 
-        engagementMap[p.numero] += parseFloat(p.prix) || 0;
-    });
+            engagementMap[p.numero] += parseFloat(p.prix) || 0;
+        });
 
     // 🔥 TRI
     budgets.sort(trierHierarchique);
@@ -533,7 +527,7 @@ async function chargerRapport() {
             sousProbable += probable;
         });
 
-        const sousReste = sousBudget - sousEngage;
+        const sousReste = sousProbable - sousEngage;
         const sousEcart = sousProbable - sousBudget;
 
         const libelleParent = parentsInfo[parent]?.libelle || "Catégorie";
@@ -570,7 +564,7 @@ async function chargerRapport() {
             const engage = engagementMap[item.numero] || 0;
             const probable = item.coutProbable || item.montant;
 
-            const reste = budget - engage;
+            const reste = probable - engage;
             const ecart = probable - budget;
 
             const tr = document.createElement("tr");
@@ -609,9 +603,28 @@ async function chargerRapport() {
     document.getElementById("totalProbable").textContent = format(totalProbable);
     document.getElementById("totalEcart").textContent =
         format(totalProbable - totalBudget);
-});
 }
 
+ // 🔥 LISTENER budget
+    onSnapshot(collection(db, "budget"), (snap) => {
+        budgets = [];
+        snap.forEach(doc => {
+            budgets.push({ id: doc.id, ...doc.data() });
+        });
+
+        render();
+    });
+
+    // 🔥 LISTENER produits
+    onSnapshot(collection(db, "produits"), (snap) => {
+        produits = [];
+        snap.forEach(doc => {
+            produits.push({ id: doc.id, ...doc.data() });
+        });
+
+        render();
+    });
+}
 // 🔥 UPDATE COUT PROBABLE
 // window.updateProbable = async (id, value) => {
 
@@ -642,7 +655,6 @@ window.updateProbable = async (id, ancien) => {
         coutProbable: valeur
     });
  // 🔥 refresh
- await chargerRapport();
 };
 
 
@@ -775,8 +787,6 @@ await chargerRapport();
         </tr>
       </tfoot>
       </table>
-
-      <p id="totalDetail"></p>
 
     </div>
 
