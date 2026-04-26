@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Coût comptabilisé</title>
+
+  <link rel="shortcut icon" href="favicon.png">
 </head>
 <style>
 
@@ -430,7 +432,6 @@ td.desc-cell {
 
 <textarea id="editDesc" placeholder="Description" class="full"></textarea>
 
-<input type="file" id="editImage" class="full">
 
 <button onclick="modifierProduit()" class="full">
     Modifier
@@ -547,7 +548,7 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // CONFIG FIREBASE
 const firebaseConfig = {
-     apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+      apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
@@ -630,7 +631,7 @@ async function chargerFichiers() {
 }
 let currentProduitId = null;
 window.ouvrirFichiers = async (produitId) => {
-    currentProduitId = produitId; // 🔥 on mémorise
+    window.currentProduitId = produitId; // 🔥 on mémorise
     const container = document.getElementById("listeFichiers");
     container.innerHTML = "";
 
@@ -993,7 +994,6 @@ window.modifierProduit = async () => {
     const type = document.getElementById("typePaiement").value;
     const prix = document.getElementById("editPrix").value;
     const desc = document.getElementById("editDesc").value;
-    const files = document.getElementById("editImage").files;
     const numero = document.getElementById("numero1").value;
     const typeCout = document.getElementById("editTypeCout").value;
 
@@ -1035,30 +1035,8 @@ window.modifierProduit = async () => {
             updateData.typeCout = typeCout;
             updateData.idNum = newIdNum;
             updateData.id = `${typeCout}-${String(newIdNum)}`;
-        }
+       }
 
-        // 🔥 UPLOAD fichiers
-        if (files.length > 0) {
-            for (let file of files) {
-                try {
-                        const result = await uploadToUploadcare(file);
-
-                        await addDoc(collection(db, "fichiers"), {
-                            produitId: docItem.id,
-                            url: result.url,
-                            filename: file.name,
-                            type: file.type,
-                            fileId: result.uuid,
-                            createdAt: serverTimestamp()
-                        });
-
-                    } catch (err) {
-                        console.error(err);
-                        alert("Erreur upload fichier");
-          
-                }
-            }
-        }
 
         updateData.updatedBy = user ? user.uid : null;
         updateData.updatedAt = serverTimestamp();
@@ -1066,7 +1044,6 @@ window.modifierProduit = async () => {
         await updateDoc(doc(db, "produits", docItem.id), updateData);
 
         // 🔥 RELOAD
-        await chargerFichiers();
         afficherProduits();
 
         // ✅🔥 RESET PROPRE (IMPORTANT)
@@ -1087,8 +1064,6 @@ function resetFormulaireModification() {
     document.getElementById("editDesc").value = "";
     document.getElementById("numero1").value = "";
     document.getElementById("editTypeCout").value = "";
-    // 🔥 IMPORTANT pour input file
-    document.getElementById("editImage").value = "";
 
 }
 
@@ -1482,8 +1457,8 @@ window.supprimerFichier = async (fileId) => {
         await chargerFichiers();
 
         // 🔥 réaffiche les fichiers du produit actuel
-        if (currentProduitId) {
-            ouvrirFichiers(currentProduitId);
+        if (window.currentProduitId) {
+            ouvrirFichiers(window.currentProduitId);
         }
         afficherProduits();
 
@@ -1516,6 +1491,57 @@ chargerDepuisLocal("numero");
 if (!localStorage.getItem("ligneData")) {
     chargerLignesBudget();
 }
+
+window.ajouterFichiersModal = async () => {
+
+    const files = document.getElementById("modalFiles").files;
+
+    if (files.length === 0) {
+        alert("Choisis au moins un fichier");
+        return;
+    }
+
+    // ⚠️ IMPORTANT : il faut garder l'ID du produit actif
+    const produitId = window.currentProduitId;
+
+    if (!produitId) {
+        alert("Aucun produit sélectionné");
+        return;
+    }
+
+    try {
+        for (let file of files) {
+
+            const result = await uploadToUploadcare(file);
+
+            await addDoc(collection(db, "fichiers"), {
+                produitId: produitId,
+                url: result.url,
+                filename: file.name,
+                type: file.type,
+                fileId: result.uuid,
+                createdAt: serverTimestamp()
+            });
+
+        }
+
+        alert("Fichiers ajoutés avec succès");
+
+        // 🔥 refresh
+        await chargerFichiers();
+        afficherProduits();
+        if (window.currentProduitId) {
+            ouvrirFichiers(window.currentProduitId);
+        }
+
+        // reset input
+        document.getElementById("modalFiles").value = "";
+
+    } catch (err) {
+        console.error(err);
+        alert("Erreur upload fichier");
+    }
+};
 </script>
 <!-- 🔥 MODAL FLOTTANT -->
 <div id="modal" class="modal-overlay">
@@ -1528,9 +1554,21 @@ if (!localStorage.getItem("ligneData")) {
     </div>
 
     <div class="modal-content">
-        <div id="listeFichiers"></div>
-  </div>
+        <div style="display: flex;  margin: 5px;">
+      <!-- 🔥 INPUT FILE -->
+      <input type="file" id="modalFiles" multiple>
 
+      <!-- 🔥 BOUTON AJOUT -->
+      <button onclick="ajouterFichiersModal()">Ajouter fichiers</button>
+      </div>
+        <br>
+        <br>
+      <!-- 🔥 LISTE -->
+      <div id="listeFichiers"></div>
+
+    </div>
+
+  </div>
 </div>
 <br>
 </body>

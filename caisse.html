@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Caisse Espèce</title>
 
+    <link rel="shortcut icon" href="favicon.png">
+
 <style>
 body { font-family: Arial; }
 table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -115,6 +117,12 @@ button {
     width: 40px;
     height: 40px;
     border-radius: 50%; /* 🔥 rond */
+}
+td.desc-cell {
+    max-width: 200px;   /* largeur fixe */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* ... */
 }
 </style>
 </head>
@@ -271,7 +279,9 @@ async function chargerDepenses() {
                 <td>${data.numero || "-"}</td>
                 <td>${data.nom}</td>
                 <td>${Number(data.prix).toLocaleString("fr-FR")} FCFA</td>
-                <td>${data.desc}</td>
+                <td class="desc-cell" title="${data.desc}">
+                    ${data.desc}
+            </td> 
             `;
 
             tableBody.appendChild(tr);
