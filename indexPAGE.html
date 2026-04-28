@@ -1172,22 +1172,56 @@ function resetFormulaireModification() {
 //         })
 // }
 
-function chargerDepuisLocal(selectId) {
 
-    const lignes = JSON.parse(localStorage.getItem("ligneData"));
+let unsubscribeBudget = null;
 
-    if (!lignes) return;
+function chargerLignesBudget() {
+
+    // 🔥 arrêter ancien listener
+    if (unsubscribeBudget) {
+        unsubscribeBudget();
+    }
+
+    unsubscribeBudget = onSnapshot(collection(db, "budget"), (snapshot) => {
+
+        let lignes = [];
+
+        snapshot.forEach(docItem => {
+
+            const data = docItem.data();
+
+            if (!data.numero) return;
+
+            // uniquement enfants
+            if (data.numero.length > 2) {
+                lignes.push(data);
+            }
+        });
+
+        // 🔥 tri propre
+        lignes.sort((a, b) =>
+            (a.numero + "").localeCompare(b.numero + "", undefined, {
+                numeric: true,
+                sensitivity: "base"
+            })
+        );
+
+        // 🔥 affichage direct
+        remplirSelect("numero1", lignes);
+        remplirSelect("numero", lignes);
+    });
+}
+
+function remplirSelect(selectId, lignes) {
 
     const select = document.getElementById(selectId);
-
     if (!select) return;
 
-    // reset
     select.innerHTML = '<option value="">--Ligne de budget--</option>';
 
     lignes.forEach(ligne => {
 
-        let indent = " ".repeat(ligne.numero.length - 2);
+        let indent = " ".repeat(Math.max(0, ligne.numero.length - 2));
 
         const option = document.createElement("option");
 
@@ -1198,50 +1232,13 @@ function chargerDepuisLocal(selectId) {
     });
 }
 
-async function chargerLignesBudget() {
+let unsubscribeProduits = null;
 
-    onSnapshot(collection(db, "budget"), (snapshot) => {
-
-    let lignes = [];
-
-    snapshot.forEach(docItem => {
-
-        const data = docItem.data();
-
-        if (!data.numero) return;
-
-        // 🔥 uniquement enfants
-        if (data.numero.length > 2) {
-            lignes.push(data);
-        }
-    });
-
-    // 🔥 tri
-    lignes.sort((a, b) =>
-        a.numero.localeCompare(b.numero, undefined, {
-            numeric: true,
-            sensitivity: "base"
-        })
-    );
-
-    // 🔥 stockage local
-    localStorage.setItem("ligneData", JSON.stringify(lignes));
-
-    // 🔥 affichage immédiat
-    chargerDepuisLocal("numero1");
-    chargerDepuisLocal("numero"); // si tu as un 2e select
-
-    });
-}
-
-let unsubscribeProduits = null; // 🔥 pour stocker le listener
-
-async function chargerProduitsSelect() {
+function chargerProduitsSelect() {
 
     const deleteSelect = document.getElementById("deleteId");
     const editSelect = document.getElementById("editId");
 
-    // 🔥 stopper ancien listener
     if (unsubscribeProduits) {
         unsubscribeProduits();
     }
@@ -1260,7 +1257,6 @@ async function chargerProduitsSelect() {
             });
         });
 
-        // 🔥 tri
         produits.sort((a, b) => (a.id || 0) - (b.id || 0));
 
         produits.forEach(p => {
@@ -1394,6 +1390,7 @@ window.telechargerFichier = async (url, filename) => {
 await chargerUsers();
 await chargerFichiers();
 afficherProduits();
+chargerLignesBudget();
 chargerProduitsSelect();
 
 const links = document.querySelectorAll("nav a");
