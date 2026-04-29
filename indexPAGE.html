@@ -511,7 +511,7 @@ td.desc-cell {
 <table border="2">
     <thead style="background-color: grey;">
         <tr>
-            <th>N°</th>
+            <th style="width: 100px;">N°</th>
             <th>Ligne de budget</th>
             <th>Fichier</th>
             <th>Fournisseurs</th>
@@ -548,13 +548,12 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // CONFIG FIREBASE
 const firebaseConfig = {
-      apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+          apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
   messagingSenderId: "357508008682",
   appId: "1:357508008682:web:8dfc70a52c876d0552e593"
-
 };
 
 const app = initializeApp(firebaseConfig);
@@ -1172,47 +1171,8 @@ function resetFormulaireModification() {
 //         })
 // }
 
-
-let unsubscribeBudget = null;
-
-function chargerLignesBudget() {
-
-    // 🔥 arrêter ancien listener
-    if (unsubscribeBudget) {
-        unsubscribeBudget();
-    }
-
-    unsubscribeBudget = onSnapshot(collection(db, "budget"), (snapshot) => {
-
-        let lignes = [];
-
-        snapshot.forEach(docItem => {
-
-            const data = docItem.data();
-
-            if (!data.numero) return;
-
-            // uniquement enfants
-            if (data.numero.length > 2) {
-                lignes.push(data);
-            }
-        });
-
-        // 🔥 tri propre
-        lignes.sort((a, b) =>
-            (a.numero + "").localeCompare(b.numero + "", undefined, {
-                numeric: true,
-                sensitivity: "base"
-            })
-        );
-
-        // 🔥 affichage direct
-        remplirSelect("numero1", lignes);
-        remplirSelect("numero", lignes);
-    });
-}
-
-function remplirSelect(selectId, lignes) {
+function chargerDepuisLocal(selectId) {
+    const lignes = JSON.parse(localStorage.getItem("ligneData")) || [];
 
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -1220,25 +1180,56 @@ function remplirSelect(selectId, lignes) {
     select.innerHTML = '<option value="">--Ligne de budget--</option>';
 
     lignes.forEach(ligne => {
-
-        let indent = " ".repeat(Math.max(0, ligne.numero.length - 2));
-
         const option = document.createElement("option");
-
         option.value = ligne.numero;
-        option.textContent = indent + ligne.numero + " - " + ligne.libelle;
-
+        option.textContent = ligne.numero + " - " + ligne.libelle;
         select.appendChild(option);
     });
 }
 
-let unsubscribeProduits = null;
+function chargerLignesBudget() {
 
-function chargerProduitsSelect() {
+    onSnapshot(collection(db, "budget"), (snapshot) => {
+
+        let lignes = [];
+
+        snapshot.forEach(docItem => {
+            const data = docItem.data();
+
+            if (!data.numero) return;
+
+            if (data.numero.length > 2) {
+                lignes.push(data);
+            }
+        });
+
+        lignes.sort((a, b) =>
+            a.numero.localeCompare(b.numero, undefined, {
+                numeric: true,
+                sensitivity: "base"
+            })
+        );
+
+        // 🔥 sauvegarde
+        localStorage.setItem("ligneData", JSON.stringify(lignes));
+
+        // 🔥 recharge propre des select (SANS conflit)
+       // 🔥 1. affichage immédiat (rapide)
+        chargerDepuisLocal("numero");
+        chargerDepuisLocal("numero1");
+
+
+    });
+}
+
+// let unsubscribeProduits = null; // 🔥 pour stocker le listener
+
+async function chargerProduitsSelect() {
 
     const deleteSelect = document.getElementById("deleteId");
     const editSelect = document.getElementById("editId");
 
+    // 🔥 stopper ancien listener
     if (unsubscribeProduits) {
         unsubscribeProduits();
     }
@@ -1257,6 +1248,7 @@ function chargerProduitsSelect() {
             });
         });
 
+        // 🔥 tri
         produits.sort((a, b) => (a.id || 0) - (b.id || 0));
 
         produits.forEach(p => {

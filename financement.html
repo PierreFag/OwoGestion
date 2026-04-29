@@ -147,7 +147,7 @@ th {
         <div id="userName"></div>
     </div>
     <div id="userBox">
-               <button onclick="logout()" style="background-color: #2c3e50; color: red;margin-right: -10px;">Déconnexion</boutton>
+               <button onclick="logout()" style="background-color: #2c3e50; color: red;margin-right: -10px;">Déconnexion</button>
     </div>
 
 </div>
@@ -163,6 +163,15 @@ th {
     <h3>Ajouter un financement</h3>
 
     <input type="number" id="montant" placeholder="Montant">
+    <input type="text" id="source" placeholder="Source">
+    <select id="type">
+    <option value="">Type de paiement</option>
+    <option>Espèce</option>
+    <option>Chèque</option>
+    <option>Virement</option>
+    <option>Mobile Money</option>
+    </select>
+
     <input type="datetime-local" id="date">
 
     <button onclick="ajouterFinancement()">Ajouter</button>
@@ -174,6 +183,8 @@ th {
 <thead>
 <tr>
     <th>Date</th>
+    <th>Source</th>
+    <th>Type de paiement</th>
     <th>Montant</th>
     <th>Actions</th>
 </tr>
@@ -184,6 +195,8 @@ th {
 <tfoot>
 <tr style="background: #eee;">
     <td><strong>Total</strong></td>
+    <td></td>
+    <td></td>
     <td id="total" style="font-size: large; font-weight: bold;">0</td>
     <td></td>
 </tr>
@@ -201,12 +214,13 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
+      apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
   messagingSenderId: "357508008682",
   appId: "1:357508008682:web:8dfc70a52c876d0552e593"
+
 };
 
 const app = initializeApp(firebaseConfig);
@@ -236,6 +250,8 @@ window.ajouterFinancement = async () => {
 
     const montant = parseFloat(document.getElementById("montant").value);
     const dateInput = document.getElementById("date").value;
+    const source= document.getElementById("source").value;
+    const type=document.getElementById("type").value;
 
     if (!montant) {
         alert("Montant invalide");
@@ -246,11 +262,16 @@ window.ajouterFinancement = async () => {
 
     await addDoc(collection(db, "financements"), {
         montant,
-        date
+        date,
+        source,
+        type
     });
 
     document.getElementById("montant").value = "";
     document.getElementById("date").value = "";
+    document.getElementById("source").value="";
+    document.getElementById("type").value="";
+
 
     afficherFinancements();
 };
@@ -265,13 +286,17 @@ window.supprimerFinancement = async (id) => {
 };
 
 // 🔥 MODIFIER
-window.modifierFinancement = async (id, ancienMontant) => {
+window.modifierFinancement = async (id, item) => {
 
-    const nouveauMontant = prompt("Nouveau montant :", ancienMontant);
+    const nouvelleSource = prompt("Nouvelle source :", item.source || "");
+    const nouveauType = prompt("Type de paiement :", item.type || "");
+    const nouveauMontant = prompt("Nouveau montant :", item.montant);
     if (!nouveauMontant) return;
 
     await updateDoc(doc(db, "financements", id), {
-        montant: parseFloat(nouveauMontant)
+        montant: parseFloat(nouveauMontant),
+        source: nouvelleSource,
+        type: nouveauType
     });
 
     afficherFinancements();
@@ -294,6 +319,7 @@ async function afficherFinancements() {
     // TRI PAR DATE
     data.sort((a, b) => b.date?.seconds - a.date?.seconds);
 
+
     data.forEach(item => {
 
         total += item.montant || 0;
@@ -306,11 +332,14 @@ async function afficherFinancements() {
 
         tr.innerHTML = `
             <td>${date.toLocaleString("fr-FR")}</td>
+            <td>${item.source || "-"}</td>
+            <td>${item.type || "-"}</td>
             <td>${item.montant.toLocaleString("fr-FR")} FCFA</td>
             <td>
-                <button onclick="modifierFinancement('${item.id}', ${item.montant})">
+                <button onclick='modifierFinancement("${item.id}", ${JSON.stringify(item)})'>
                     Modifier
                 </button>
+                
                 <button onclick="supprimerFinancement('${item.id}')">
                     Supprimer
                 </button>

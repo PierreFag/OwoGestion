@@ -18,7 +18,7 @@ table {
 th, td {
     border: 1px solid black;
     padding: 8px;
-    text-align: center;
+    text-align: left;
 }
 
 th { background: #eee; }
@@ -204,6 +204,16 @@ button {
 
 tbody tr:hover {
     background-color: #c2c6c8; /* effet au survol */
+}
+
+td.desc-cell {
+    max-width: 300px;   /* largeur fixe */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* ... */
+}
+td.fichier{
+    width: 20px;
 }
 </style>
 </head>
@@ -675,21 +685,81 @@ links.forEach(link => {
     }
 });
 
+// window.voirDetails = async (numero) => {
+
+//     const detailBody = document.getElementById("detailBody");
+//     detailBody.innerHTML = "";
+
+//     const snapshot = await getDocs(collection(db, "produits"));
+//     const fich=await getDocs(collection(db, "fichiers"));
+//     const lignbudget=getDocs(collection(db, "budget"));
+
+//     let total = 0;
+
+//     snapshot.forEach(docItem => {
+
+//         const lignebudget=lignbudget.libelle;
+
+//         const fichier = fich.docs.find(f => f.data().produitId === docItem.id);
+
+//         const data = docItem.data();
+
+//         if (data.numero === numero) {
+
+//             total += parseFloat(data.prix) || 0;
+
+//             const tr = document.createElement("tr");
+
+//             tr.innerHTML = `
+//                 <td>${data.nom}</td>
+//                 <td>${Number(data.prix).toLocaleString("fr-FR")} FCFA</td>
+//                 <td>${data.desc}</td>
+//                 <td>
+//                     ${fichier
+//                         ? '<span title="Fichier joint">📎</span>' 
+//                         : '-'
+//                     }
+//                 </td>
+//             `;
+
+//             detailBody.appendChild(tr);
+//             document.getElementById("totalDetail").textContent = total.toLocaleString("fr-FR") + " FCFA";
+//             document.getElementById("numeroligne").textContent = numero;
+//              document.getElementById("ligne").textContent = lignebudget;
+
+//         }
+//     });
+
+//     // afficher modal
+//     document.getElementById("modal").style.display = "flex";
+// };
+
 window.voirDetails = async (numero) => {
 
     const detailBody = document.getElementById("detailBody");
     detailBody.innerHTML = "";
 
     const snapshot = await getDocs(collection(db, "produits"));
-    const fich=await getDocs(collection(db, "fichiers"));
+    const fich = await getDocs(collection(db, "fichiers"));
+    const lignbudget = await getDocs(collection(db, "budget")); // ✅ await
 
     let total = 0;
+    let libelle = "";
+
+    // 🔥 trouver le libellé
+    lignbudget.forEach(doc => {
+        const data = doc.data();
+
+        if (data.numero === numero) {
+            libelle = data.libelle;
+        }
+    });
 
     snapshot.forEach(docItem => {
 
-        const fichier = fich.docs.find(f => f.data().produitId === docItem.id);
-
         const data = docItem.data();
+
+        const fichier = fich.docs.find(f => f.data().produitId === docItem.id);
 
         if (data.numero === numero) {
 
@@ -699,23 +769,31 @@ window.voirDetails = async (numero) => {
 
             tr.innerHTML = `
                 <td>${data.nom}</td>
-                <td>${Number(data.prix).toLocaleString("fr-FR")} FCFA</td>
-                <td>${data.desc}</td>
-                <td>
+                <td class="desc-cell" title="${data.desc}">
+                    ${data.desc}
+            </td>  
+                <td class="fichier">
                     ${fichier
                         ? '<span title="Fichier joint">📎</span>' 
                         : '-'
                     }
                 </td>
+                <td>${Number(data.prix).toLocaleString("fr-FR")} FCFA</td>
             `;
 
             detailBody.appendChild(tr);
-            document.getElementById("totalDetail").textContent = total.toLocaleString("fr-FR") + " FCFA";
-            document.getElementById("numeroligne").textContent = numero;
         }
     });
 
-    // afficher modal
+    // 🔥 affichage global
+    document.getElementById("totalDetail").textContent =
+        total.toLocaleString("fr-FR") + " FCFA";
+
+    document.getElementById("numeroligne").textContent = numero;
+
+    document.getElementById("ligne").textContent =
+         "-"+(libelle || "Non défini");
+
     document.getElementById("modal").style.display = "flex";
 };
 
@@ -767,23 +845,24 @@ await chargerRapport();
 
     <div class="modal-content">
         <div >
-           <span>N° ligne:</span> 
+           <span>Ligne:</span> 
            <span id="numeroligne"></span>
+           <span id="ligne"></span>
         </div>
 
       <table>
         <thead>
           <tr>
             <th>Fournisseur</th>
-            <th>Prix</th>
             <th>Description</th>
             <th>Fichier</th>
+            <th>Prix</th>
           </tr>
         </thead>
         <tbody id="detailBody"></tbody>
         <tfoot>
         <tr>
-            <td style="font-size: large"><strong>Total</strong></td>
+            <td colspan="3" style="font-size: large;"><strong>TOTAL</strong></td>
             <td id="totalDetail" style="font-size: large; font-weight: bold;"></td>
             
         </tr>
