@@ -308,14 +308,13 @@ from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // CONFIG FIREBASE
 const firebaseConfig = {
+
       apiKey: "AIzaSyCYBRo0CLV4AD7pzGFIPDGYFIPhJ_JvVJs",
   authDomain: "owogestion-de436.firebaseapp.com",
   projectId: "owogestion-de436",
   storageBucket: "owogestion-de436.firebasestorage.app",
   messagingSenderId: "357508008682",
   appId: "1:357508008682:web:8dfc70a52c876d0552e593"
-
-
 
 };
 const app = initializeApp(firebaseConfig);
@@ -465,6 +464,7 @@ async function getProduits() {
 //     return produits;
 // }
 
+let toutesLesLignesBudget= [];
 // 🔥 CHARGEMENT
 async function chargerRapport() {
 
@@ -532,7 +532,7 @@ async function chargerRapport() {
 
             const budget = item.montant || 0;
             const engage = engagementMap[item.numero] || 0;
-            const probable = item.coutProbable || item.montant;
+            const probable = item.coutProbable ?? item.montant;
 
             sousBudget += budget;
             sousEngage += engage;
@@ -574,7 +574,7 @@ async function chargerRapport() {
 
             const budget = item.montant || 0;
             const engage = engagementMap[item.numero] || 0;
-            const probable = item.coutProbable || item.montant;
+            const probable = item.coutProbable ?? item.montant;
 
             const reste = probable - engage;
             const ecart = probable - budget;
@@ -586,10 +586,21 @@ async function chargerRapport() {
                 <td class="indent-2" style="text-align: left;">${item.libelle}</td>
                 <td>${format(budget)}</td>
                 <td>
-                    <span style="cursor:pointer; color:#1d5288;"
-                        onclick="voirDetails('${item.numero}')">
-                        ${format(engage)}
-                    </span>
+                    ${
+                        item.numero === "A01"
+                        ? `
+                            <span>
+                                ${format(engage)}
+                            </span>
+                        `
+                        : `
+                            <span
+                                style="cursor:pointer; color:#1d5288;"
+                                onclick="voirDetails('${item.numero}')">
+                                ${format(engage)}
+                            </span>
+                        `
+                    }
                 </td>
                 <td>${format(reste)}</td>
                 <td>
@@ -623,6 +634,10 @@ async function chargerRapport() {
         snap.forEach(doc => {
             budgets.push({ id: doc.id, ...doc.data() });
         });
+
+        // 🔥 sauvegarde des lignes budget
+    toutesLesLignesBudget = budgets.filter(b => b.numero);
+
 
         render();
     });
@@ -767,19 +782,53 @@ window.voirDetails = async (numero) => {
 
             const tr = document.createElement("tr");
 
-            tr.innerHTML = `
-                <td>${data.nom}</td>
-                <td class="desc-cell" title="${data.desc}">
-                    ${data.desc}
-            </td>  
-                <td class="fichier">
-                    ${fichier
-                        ? '<span title="Fichier joint">📎</span>' 
-                        : '-'
-                    }
-                </td>
-                <td>${Number(data.prix).toLocaleString("fr-FR")} FCFA</td>
-            `;
+            const options = toutesLesLignesBudget
+        .filter(l => l.numero.length > 2) // enfants uniquement
+        .sort(trierHierarchique)
+        .map(l => `
+            <option value="${l.numero}"
+                ${l.numero === data.numero ? "selected" : ""}>
+                ${l.numero} - ${l.libelle}
+            </option>
+        `)
+        .join("");
+
+    tr.innerHTML = `
+        <td>${data.nom}</td>
+
+        <td style="width: 90px;">
+    <select 
+        id="ligne-${docItem.id}"
+        style="
+            width: 80px;
+            font-size: 11px;
+            padding: 2px;
+        ">
+        ${options}
+    </select>
+</td>
+
+        <td class="desc-cell" title="${data.desc}">
+            ${data.desc}
+        </td>
+
+        <td class="fichier">
+            ${fichier
+                ? '<span title="Fichier joint">📎</span>'
+                : '-'
+            }
+        </td>
+
+        <td>
+            ${Number(data.prix).toLocaleString("fr-FR")} FCFA
+        </td>
+
+        <td>
+            <button onclick="changerLigne('${docItem.id}')">
+                Enregistrer
+            </button>
+        </td>
+    `;
 
             detailBody.appendChild(tr);
         }
@@ -795,6 +844,27 @@ window.voirDetails = async (numero) => {
          "-"+(libelle || "Non défini");
 
     document.getElementById("modal").style.display = "flex";
+};
+
+window.changerLigne = async (produitId) => {
+
+    const select = document.getElementById(`ligne-${produitId}`);
+
+    const nouvelleLigne = select.value;
+
+    try {
+
+        await updateDoc(doc(db, "produits", produitId), {
+            numero: nouvelleLigne
+        });
+
+        alert("Ligne mise à jour avec succès");
+
+    } catch (error) {
+
+        console.error(error);
+        alert("Erreur lors de la mise à jour");
+    }
 };
 
 window.fermerModal = () => {
@@ -852,19 +922,20 @@ await chargerRapport();
 
       <table>
         <thead>
-          <tr>
+        <tr>
             <th>Fournisseur</th>
+            <th>Ligne</th>
             <th>Description</th>
             <th>Fichier</th>
             <th>Prix</th>
-          </tr>
+            <th>Action</th>
+        </tr>
         </thead>
         <tbody id="detailBody"></tbody>
         <tfoot>
         <tr>
-            <td colspan="3" style="font-size: large;"><strong>TOTAL</strong></td>
+            <td colspan="4" style="font-size: large;"><strong>TOTAL</strong></td>
             <td id="totalDetail" style="font-size: large; font-weight: bold;"></td>
-            
         </tr>
       </tfoot>
       </table>
