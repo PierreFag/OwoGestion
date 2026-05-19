@@ -15,15 +15,7 @@ table {
     margin-top: 20px;
 }
 
- td {
-    border: 1px solid black;
-    padding: 8px;
-    text-align: left;
-}
-thead th {
-    position: sticky;
-    top: 119px; /* juste sous le menu */
-    z-index: 50;
+ th, td {
     border: 1px solid black;
     padding: 8px;
     text-align: left;
@@ -290,7 +282,12 @@ td.fichier{
 <h1>📊 Rapport de coût</h1>
 
 <table>
-<thead>
+<thead style="position: sticky;
+    top: 119px; /* juste sous le menu */
+    z-index: 50;
+    border: 1px solid black;
+    padding: 8px;
+    text-align: left;">
 <tr>
     <th>N° ligne</th>
     <th>Libellé</th>
