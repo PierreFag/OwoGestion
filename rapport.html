@@ -15,7 +15,15 @@ table {
     margin-top: 20px;
 }
 
-th, td {
+ td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: left;
+}
+thead th {
+    position: sticky;
+    top: 119px; /* juste sous le menu */
+    z-index: 50;
     border: 1px solid black;
     padding: 8px;
     text-align: left;
@@ -25,6 +33,15 @@ th { background: #eee; }
 
 input {
     width: 100px;
+}
+.ecart-negatif {
+    color: red;
+    font-weight: bold;
+}
+
+.ecart-positif {
+    color: green;
+    font-weight: bold;
 }
 
 .negative { background-color: #ffcccc; }
@@ -359,6 +376,8 @@ if (user) {
 
       if (snap.exists()) {
         const data = snap.data();
+        currentUserPermissions = data.permissions || {};
+        renderRapportIfReady();
 
         appliquerPermissionsMenu(data);
         localStorage.setItem("userData", JSON.stringify(data));
@@ -394,6 +413,8 @@ function afficherUser(data) {
         document.getElementById("userName").textContent =
           data.prenom + " " + data.nom;
 }
+
+let currentUserPermissions = {};
 
 function appliquerPermissionsMenu(data) {
 
@@ -463,7 +484,13 @@ async function getProduits() {
 
 //     return produits;
 // }
+let refreshRapport = null;
 
+function renderRapportIfReady() {
+    if (typeof refreshRapport === "function") {
+        refreshRapport();
+    }
+}
 let toutesLesLignesBudget= [];
 // 🔥 CHARGEMENT
 async function chargerRapport() {
@@ -604,10 +631,19 @@ async function chargerRapport() {
                 </td>
                 <td>${format(reste)}</td>
                 <td>
-                    <span style="cursor:pointer; color:#1d5288;"
+                    ${
+                    currentUserPermissions.rapport !== "write" 
+                   
+                    ?
+                    `<span>
+                        ${format(probable)}
+                    </span>`
+                     :
+                    `<span style="cursor:pointer; color:#1d5288;"
                         onclick="updateProbable('${item.id}', ${probable})">
                         ${format(probable)}
-                    </span>
+                    </span>`
+                    }
                 </td>
             
                 <td class="${ecart > 0 ? 'negative' : 'positive'}">
@@ -624,9 +660,15 @@ async function chargerRapport() {
     document.getElementById("totalEngage").textContent = format(totalEngage);
     document.getElementById("totalReste").textContent = format(totalReste);
     document.getElementById("totalProbable").textContent = format(totalProbable);
-    document.getElementById("totalEcart").textContent =
-        format(totalProbable - totalBudget);
-}
+    const ecartTotal = totalProbable - totalBudget;
+
+    const totalEcartEl = document.getElementById("totalEcart");
+
+    totalEcartEl.textContent = format(ecartTotal);
+
+    totalEcartEl.className = ecartTotal < 0 ? "ecart-positif": "ecart-negatif";
+    }
+refreshRapport = render;
 
  // 🔥 LISTENER budget
     onSnapshot(collection(db, "budget"), (snap) => {
@@ -799,6 +841,7 @@ window.voirDetails = async (numero) => {
         <td style="width: 90px;">
     <select 
         id="ligne-${docItem.id}"
+         ${currentUserPermissions.rapport !== "write" ? "disabled" : ""}
         style="
             width: 80px;
             font-size: 11px;
@@ -824,10 +867,16 @@ window.voirDetails = async (numero) => {
         </td>
 
         <td>
+    ${
+        currentUserPermissions.rapport === "write"
+        ? `
             <button onclick="changerLigne('${docItem.id}')">
-                Enregistrer
+               Enregistrer
             </button>
-        </td>
+        `
+        : "-"
+    }
+</td>
     `;
 
             detailBody.appendChild(tr);
