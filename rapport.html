@@ -15,11 +15,12 @@ table {
     margin-top: 20px;
 }
 
- th, td {
+th, td {
     border: 1px solid black;
     padding: 8px;
     text-align: left;
 }
+
 
 th { background: #eee; }
 
@@ -282,7 +283,7 @@ td.fichier{
 <h1>📊 Rapport de coût</h1>
 
 <table>
-<thead style="position: sticky;
+<thead style=" position: sticky;
     top: 119px; /* juste sous le menu */
     z-index: 50;
     border: 1px solid black;
@@ -611,7 +612,7 @@ async function chargerRapport() {
                 <td>${format(budget)}</td>
                 <td>
                     ${
-                        item.numero === "A01"
+                        item.numero === ""
                         ? `
                             <span>
                                 ${format(engage)}
