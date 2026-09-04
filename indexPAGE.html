@@ -523,7 +523,7 @@ td.desc-cell {
     </thead>
     <tbody id="tableBody"></tbody>
     <tfoot>
-        <tr style="background-color: gray;">
+        <tr style="background-color: rgb(195, 193, 193);">
             <td colspan="5" style="font-size: large"><strong>Total</strong></td>
             <td id="totalPrix" style="font-size: large; font-weight: bold;">0</td>
             <td colspan="1"></td>
@@ -534,7 +534,7 @@ td.desc-cell {
 
 <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"></script>
 <script>
-  UPLOADCARE_PUBLIC_KEY = "ae3015492e4d03065d7e";
+  UPLOADCARE_PUBLIC_KEY = "daa5c74a9f9deef86f62";
 </script>
 
 <script type="module">
@@ -668,7 +668,7 @@ console.log("Fichiers trouvés:", fichiersMap[produitId]);
 
 async function uploadToUploadcare(file) {
     const formData = new FormData();
-    formData.append("UPLOADCARE_PUB_KEY", "ae3015492e4d03065d7e");
+    formData.append("UPLOADCARE_PUB_KEY", "daa5c74a9f9deef86f62");
     formData.append("UPLOADCARE_STORE", "1");
     formData.append("file", file);
 
@@ -683,7 +683,7 @@ async function uploadToUploadcare(file) {
         throw new Error("Erreur Uploadcare");
     }
 
-    const CDN_BASE = "https://1qq9l7n6hv.ucarecd.net";
+    const CDN_BASE = "https://5c4x5e1sp8.ucarecd.net";
 
         return {
             url: `${CDN_BASE}/${data.file}/${encodeURIComponent(file.name)}`,
